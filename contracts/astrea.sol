@@ -7,11 +7,12 @@ contract ASTRAEA {
     event PollCreated(uint256 indexed _id, address indexed _submitter, string _url); 
     event PollClosed(uint256 indexed _id, Outcome _gameOutcome, Outcome _votingOutcome, Outcome _certOutcome); 
 
-    enum Outcome { FALSE, TRUE, NO_DECISION }
+    enum Outcome { FALSE, TRUE, OPINION, NO_DECISION }
 
     struct Belief {
         uint256 trueStake; 
-        uint256 falseStake; 
+        uint256 falseStake;
+        uint256 opinionStake; // add enhancement 7/01: amount of opinion stake for busters
     }
  
     struct Poll {
@@ -20,10 +21,12 @@ contract ASTRAEA {
 
         uint256 totalTrueVoteStake; 
         uint256 totalFalseVoteStake; 
+        uint256 totalOpinionVoteStake; // add enhancement 7/01: amount of opinion stake for busters
         mapping(address => Belief) votes; 
 
         uint256 totalTrueCertStake;
         uint256 totalFalseCertStake; 
+        uint256 totalOpinionCertStake; // add enhancement 7/01: opinion stake for certifiers
         mapping(address => Belief) certs; 
 
         // outcomes 
@@ -69,6 +72,7 @@ contract ASTRAEA {
 
     uint256 trueRewardPool = 0; 
     uint256 falseRewardPool = 0; 
+    uint256 opinionRewardPool = 0; // add enhancement 7/01: new pool in order to not penalize certifier in case of opinion
     uint256 tetha = 10; 
 
     /** SUBMITTER **/ 
@@ -116,7 +120,7 @@ contract ASTRAEA {
         voterReservations[msg.sender] = voteReservation; 
     }
 
-    function vote(bool belief) public {
+    function vote(Outcome belief) public {
         // check that the voter has previously request a reservation 
         VoteReservation storage reservation = voterReservations[msg.sender]; 
         require(reservation.pollId != 0); 
@@ -130,26 +134,54 @@ contract ASTRAEA {
         // check maximum voting stake ??? 
         // require(reservation.stake + polls[reservation.pollId].votes[msg.sender] <= MAX_VOTE_STAKE);  
         
-        if(belief) {
+        if(belief == Outcome.TRUE) {
             currentPoll.votes[msg.sender].trueStake += reservation.stake; 
             currentPoll.totalTrueVoteStake += reservation.stake; 
-        } else {
+        } else if(belief == Outcome.FALSE){
             currentPoll.votes[msg.sender].falseStake += reservation.stake; 
             currentPoll.totalFalseVoteStake += reservation.stake; 
-        }        
+        } else {
+            currentPoll.votes[msg.sender].opinionStake += reservation.stake; 
+            currentPoll.totalOpinionVoteStake += reservation.stake; 
+        }      
 
         // Termination condition 
-        if(currentPoll.totalTrueVoteStake + currentPoll.totalFalseVoteStake >= VOTE_STAKE_LIMIT) {
+        if(currentPoll.totalTrueVoteStake + currentPoll.totalFalseVoteStake + currentPoll.totalOpinionVoteStake >= VOTE_STAKE_LIMIT) {
             currentPoll.open = false; 
             
             // set outcomes 
-            currentPoll.votingOutcome = currentPoll.totalFalseVoteStake == currentPoll.totalTrueVoteStake
-                ? Outcome.NO_DECISION : currentPoll.totalFalseVoteStake > currentPoll.totalTrueVoteStake ? 
-                    Outcome.FALSE : Outcome.TRUE; 
-                    
-            currentPoll.certOutcome = currentPoll.totalFalseCertStake == currentPoll.totalTrueCertStake
-                ? Outcome.NO_DECISION : currentPoll.totalFalseCertStake > currentPoll.totalTrueCertStake ? 
-                    Outcome.FALSE : Outcome.TRUE; 
+            //______________________
+            //|    | T   F   O   U  |
+            //|----|----------------|
+            //|  T | U   U   U   U  |
+            //|  F | U   F   U   U  |
+            //|  O | U   U   O   U  |
+            //|  U | U   U   U   U  |
+            //|____|________________|
+
+            //outcome from busters
+            if(currentPoll.totalFalseVoteStake > currentPoll.totalTrueVoteStake){ // F > T
+                currentPoll.votingOutcome = currentPoll.totalFalseVoteStake > currentPoll.totalOpinionVoteStake ? Outcome.FALSE : // T < F > O
+                currentPoll.totalFalseVoteStake < currentPoll.totalOpinionVoteStake ? Outcome.OPINION : Outcome.NO_DECISION; // O > F > T : F == O > T
+            }
+            else if(currentPoll.totalFalseVoteStake < currentPoll.totalTrueVoteStake){ // T > F
+                currentPoll.votingOutcome = currentPoll.totalTrueVoteStake > currentPoll.totalOpinionVoteStake ? Outcome.FALSE : // F < T > O
+                currentPoll.totalTrueVoteStake < currentPoll.totalOpinionVoteStake ? Outcome.OPINION : Outcome.NO_DECISION; // O > T > F : T == O > F
+            }
+            else
+                currentPoll.votingOutcome = currentPoll.totalOpinionVoteStake > currentPoll.totalTrueVoteStake ? Outcome.OPINION : Outcome.NO_DECISION; // T == F < O : T == F >= O 
+
+            // outcome from experts (same of busters)
+            if(currentPoll.totalFalseCertStake > currentPoll.totalTrueCertStake){ 
+                currentPoll.certOutcome = currentPoll.totalFalseCertStake > currentPoll.totalOpinionCertStake ? Outcome.FALSE :
+                currentPoll.totalFalseCertStake < currentPoll.totalOpinionCertStake ? Outcome.OPINION : Outcome.NO_DECISION;
+            }
+            else if(currentPoll.totalFalseCertStake < currentPoll.totalTrueCertStake){
+                currentPoll.certOutcome = currentPoll.totalTrueCertStake > currentPoll.totalOpinionCertStake ? Outcome.FALSE :
+                currentPoll.totalTrueCertStake < currentPoll.totalOpinionCertStake ? Outcome.OPINION : Outcome.NO_DECISION;
+            }
+            else
+                currentPoll.certOutcome = currentPoll.totalOpinionCertStake > currentPoll.totalTrueCertStake ? Outcome.OPINION : Outcome.NO_DECISION;
             
             currentPoll.gameOutcome = currentPoll.votingOutcome == currentPoll.certOutcome ? 
                 currentPoll.votingOutcome : Outcome.NO_DECISION; 
@@ -160,9 +192,17 @@ contract ASTRAEA {
 
                 // reward pools swap
                 if(currentPoll.certOutcome == Outcome.TRUE) {
-                    falseRewardPool += trueRewardPool / tetha; 
+                    falseRewardPool += trueRewardPool / tetha + opinionRewardPool / tetha; 
+                    trueRewardPool -= trueRewardPool / tetha; // ?? 
+                    opinionRewardPool -= opinionRewardPool / tetha; // ??
                 } else if(currentPoll.certOutcome == Outcome.FALSE) {
-                    trueRewardPool += falseRewardPool / tetha; 
+                    trueRewardPool += falseRewardPool / tetha + opinionRewardPool / tetha; 
+                    falseRewardPool -= falseRewardPool / tetha; // ??
+                    opinionRewardPool -= opinionRewardPool / tetha; // ??
+                } else if(currentPoll.certOutcome == Outcome.OPINION) {
+                    opinionRewardPool += falseRewardPool / tetha + trueRewardPool / tetha; 
+                    falseRewardPool -= falseRewardPool / tetha; // ??
+                    trueRewardPool -= trueRewardPool / tetha; // ??
                 }
             } else {
                 // save the reward to give to the certifiers 
@@ -170,6 +210,8 @@ contract ASTRAEA {
                     currentPoll.certReward = trueRewardPool / tetha; 
                 } else if(currentPoll.certOutcome == Outcome.FALSE) {
                     currentPoll.certReward = falseRewardPool / tetha; 
+                } else if(currentPoll.certOutcome == Outcome.OPINION){
+                    currentPoll.certReward = opinionRewardPool / tetha; 
                 }
             }
         
@@ -185,7 +227,7 @@ contract ASTRAEA {
     }
 
     /** CERTIFIER **/ 
-    function certify(uint256 pollId, bool belief) public payable {
+    function certify(uint256 pollId, Outcome belief) public payable {
         // check that the poll actually exist and its open 
         require(polls[pollId].submitter != address(0));
         require(polls[pollId].open == true); 
@@ -193,12 +235,15 @@ contract ASTRAEA {
         // check min voting stake 
         require(msg.value >= MIN_CERT_STAKE);  
         
-        if(belief) {
+        if(belief == Outcome.TRUE) {
             polls[pollId].certs[msg.sender].trueStake += msg.value; 
             polls[pollId].totalTrueCertStake += msg.value; 
-        } else {
+        } else if(belief == Outcome.FALSE){
             polls[pollId].certs[msg.sender].falseStake += msg.value; 
             polls[pollId].totalFalseCertStake += msg.value; 
+        } else{
+            polls[pollId].certs[msg.sender].opinionStake += msg.value;
+            polls[pollId].totalTrueCertStake += msg.value; 
         }
      
     }
@@ -217,12 +262,16 @@ contract ASTRAEA {
             reward += currentPoll.votes[msg.sender].trueStake / currentPoll.totalTrueVoteStake * SUBMISSION_FEE; 
         else if(currentPoll.gameOutcome == Outcome.FALSE && currentPoll.votes[msg.sender].falseStake > 0)
             reward += currentPoll.votes[msg.sender].falseStake / currentPoll.totalFalseVoteStake * SUBMISSION_FEE; 
+        else if(currentPoll.gameOutcome == Outcome.OPINION && currentPoll.votes[msg.sender].opinionStake > 0)
+            reward += currentPoll.votes[msg.sender].opinionStake / currentPoll.totalOpinionVoteStake * SUBMISSION_FEE; 
 
         // check certs 
         if(currentPoll.gameOutcome == Outcome.TRUE && currentPoll.certs[msg.sender].trueStake > 0)
             reward += currentPoll.certReward / currentPoll.totalTrueCertStake * currentPoll.certs[msg.sender].trueStake; 
         else if (currentPoll.gameOutcome == Outcome.FALSE && currentPoll.certs[msg.sender].falseStake > 0)
-            reward += currentPoll.certReward / currentPoll.totalFalseCertStake * currentPoll.certs[msg.sender].falseStake;            
+            reward += currentPoll.certReward / currentPoll.totalFalseCertStake * currentPoll.certs[msg.sender].falseStake;         
+        else if (currentPoll.gameOutcome == Outcome.OPINION && currentPoll.certs[msg.sender].falseStake > 0)
+            reward += currentPoll.certReward / currentPoll.totalOpinionCertStake * currentPoll.certs[msg.sender].opinionStake;   
     
         emit Reward(reward); 
 

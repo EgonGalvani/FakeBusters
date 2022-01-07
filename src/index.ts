@@ -4,6 +4,8 @@ import { BigNumber, Contract, ContractFactory, ethers, Signer } from "ethers";
 
 const ASTRAEA = require("../build/ASTRAEA.json");
 
+enum Outcome { FALSE, TRUE, OPINION}
+
 const provider: JsonRpcProvider = new ethers.providers.JsonRpcProvider(
   "http://127.0.0.1:7545"
 );
@@ -25,7 +27,7 @@ const deployAstraeaContract: () => Promise<Contract> = async () => {
   return deployContract(ASTRAEA.abi, ASTRAEA.bytecode, wallet);
 };
 
-const contractAddress = "0x5195F9Dd99B32bD61AC3360d65f0c1aB018438de";
+// const contractAddress = "0x5195F9Dd99B32bD61AC3360d65f0c1aB018438de";
 const init = async () => {
   const contract = await deployAstraeaContract(); // new Contract(contractAddress, ASTRAEA.abi, wallet); //
   console.log(`Contract Address: ${contract.address}`);
@@ -60,14 +62,14 @@ const init = async () => {
   const url =
     "https://www.lercio.it/in-arrivo-gomorras-walking-dead-la-serie-con-tutti-i-morti-di-gomorra-in-versione-zombie/";
 
-  let activePolls = await contract.getActivePolls();
-  console.log(`Active polls: ${activePolls}`);
+  // let activePolls = await contract.getActivePolls();
+  // console.log(`Active polls: ${activePolls}`);
 
   let recipt = await contract.submit(url, { value: submissionFee });
   await recipt.wait();
 
   // get list of active pools
-  activePolls = await contract.getActivePolls();
+  let activePolls = await contract.getActivePolls();
   console.log(`Active polls: ${activePolls}`);
 
   /** VOTER - try to vote */
@@ -80,7 +82,7 @@ const init = async () => {
   console.log(`Reservation id: ${reservation.pollId}`);
 
   // 3. actually vote
-  let belief = true; // after checking online i think that the news is true
+  let belief = Outcome.TRUE; // after checking online i think that the news is true
   recipt = await contract.vote(belief);
   await recipt.wait();
 
@@ -102,7 +104,7 @@ const init = async () => {
   console.log(`Reservation id: ${reservation.pollId}`);
 
   // 3. actually vote
-  belief = true; // after checking online i think that the news is true
+  belief = Outcome.TRUE; // after checking online i think that the news is true
   recipt = await contract.vote(belief);
   await recipt.wait();
 
