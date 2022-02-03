@@ -7,6 +7,8 @@ import {
   Signer,
   Wallet,
 } from "ethers";
+const csv = require("csv-parser");
+const fs = require("fs");
 
 require("dotenv").config();
 const ASTRAEA = require("../build/ASTRAEA.json");
@@ -126,9 +128,24 @@ const withdraw = async (contract: Contract, wallet: Wallet, id: any) => {
   return result;
 };
 
-const init = async () => {
-  const contractAddress = await deployFirstTime();
-  const contract = new Contract(contractAddress, ASTRAEA.abi);
-
-  listenForEvents(contract);
+const parseCVS = (path: string) => {
+  fs.createReadStream("data.csv")
+    .pipe(csv())
+    .on("data", (row: any) => {
+      console.log(row);
+    })
+    .on("end", () => {
+      console.log("CSV file successfully processed");
+    });
 };
+
+const init = async () => {
+  // const contractAddress = await deployFirstTime();
+  // const contract = new Contract(contractAddress, ASTRAEA.abi);
+
+  // listenForEvents(contract);
+  console.log("Reading...");
+  parseCVS("../data/answers.csv");
+};
+
+init();
