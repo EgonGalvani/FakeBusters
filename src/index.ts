@@ -128,15 +128,35 @@ const withdraw = async (contract: Contract, wallet: Wallet, id: any) => {
   return result;
 };
 
+type AnswerItem = {
+  firstAnswerIndex: number;
+  firstAnswer: Outcome;
+  secondAnswerIndex: number;
+  secondAnswer: Outcome;
+};
+const fromItalianToOutcome = (italian: string) => {
+  if (italian == "Reale") return Outcome.TRUE;
+  if (italian == "Fake") return Outcome.FALSE;
+  return Outcome.OPINION;
+};
 const parseCVS = (path: string) => {
-  fs.createReadStream("data.csv")
-    .pipe(csv())
-    .on("data", (row: any) => {
-      console.log(row);
-    })
-    .on("end", () => {
-      console.log("CSV file successfully processed");
+  return new Promise<Array<AnswerItem>>((resolve, reject) => {
+    let items: Array<AnswerItem> = [];
+    let stream = fs.createReadStream(path);
+    stream = stream.pipe(csv());
+    stream.on("data", (row: any) => {
+      items.push({
+        firstAnswerIndex: row.index1,
+        secondAnswerIndex: row.index2,
+        firstAnswer: fromItalianToOutcome(row["answer_1_" + row.index1]),
+        secondAnswer: fromItalianToOutcome(row["answer_2_" + row.index2]),
+      });
     });
+
+    return stream.on("end", () => {
+      resolve(items);
+    });
+  });
 };
 
 const init = async () => {
@@ -144,8 +164,8 @@ const init = async () => {
   // const contract = new Contract(contractAddress, ASTRAEA.abi);
 
   // listenForEvents(contract);
-  console.log("Reading...");
-  parseCVS("../data/answers.csv");
+  const items: Array<AnswerItem> = await parseCVS("data/answers.csv");
+  
 };
 
 init();
