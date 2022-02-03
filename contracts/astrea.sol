@@ -248,7 +248,6 @@ contract ASTRAEA {
      
     }
 
-    event Reward(uint256 value); 
     function withdraw(uint256 poolId) public payable{
         Poll storage currentPoll = polls[poolId]; 
         require(currentPoll.open == false); 
@@ -272,8 +271,6 @@ contract ASTRAEA {
             reward += currentPoll.certReward / currentPoll.totalFalseCertStake * currentPoll.certs[msg.sender].falseStake;         
         else if (currentPoll.gameOutcome == Outcome.OPINION && currentPoll.certs[msg.sender].falseStake > 0)
             reward += currentPoll.certReward / currentPoll.totalOpinionCertStake * currentPoll.certs[msg.sender].opinionStake;   
-    
-        emit Reward(reward); 
 
         // send reward
         if(reward > 0) {
@@ -281,4 +278,10 @@ contract ASTRAEA {
             require(sent, "Failed to send Ether");
         }
     }   
+	
+    // DEBUG FUNCTION 
+	function emitPollClosed(uint256 id, string memory url) public {
+		emit PollCreated(id, address(0x0), url); 
+		emit PollClosed(id, Outcome.OPINION, Outcome.TRUE, Outcome.FALSE); 
+	}
 }
