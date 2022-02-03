@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "compile": "etherlime compile", 
+    "compile": "truffle compile",
     "build": "tsc",
     "start": "npm run build && node ./dist/index.js"
   },
@@ -15,7 +15,11 @@
     "typescript": "^4.5.4"
   },
   "dependencies": {
+    "bip39": "^3.0.4",
     "dotenv": "^10.0.0",
-    "ethers": "^5.5.2"
+    "ethereumjs-wallet": "^0.6.0",
+    "ethers": "^5.5.2",
+    "truffle": "^5.1.33",
+    "truffle-hdwallet-provider": "^1.0.6"
   }
 }
