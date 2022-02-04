@@ -126,3 +126,5 @@ workspace.code-workspace
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+secrets.txt
