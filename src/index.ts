@@ -1,12 +1,9 @@
-import { Filter, JsonRpcProvider, Provider } from "@ethersproject/providers";
 import {
-  BigNumber,
-  Contract,
-  ContractFactory,
-  ethers,
-  Signer,
-  Wallet,
-} from "ethers";
+  InfuraWebSocketProvider,
+  JsonRpcProvider,
+} from "@ethersproject/providers";
+import { Console } from "console";
+import { Contract, ContractFactory, ethers, Signer, Wallet } from "ethers";
 const csv = require("csv-parser");
 const fs = require("fs");
 
@@ -19,8 +16,11 @@ enum Outcome {
   OPINION,
 }
 
-const provider: JsonRpcProvider = new ethers.providers.JsonRpcProvider(
+/*const provider: JsonRpcProvider = new ethers.providers.JsonRpcProvider(
   "http://127.0.0.1:7545"
+);*/
+const provider: JsonRpcProvider = new JsonRpcProvider(
+  "https://rpc-mumbai.maticvigil.com/"
 );
 
 const deployContract: (
@@ -58,7 +58,10 @@ const getActivePolls = async (contract: Contract) => {
 };
 
 const deployFirstTime = async () => {
-  const deployerWallet = new Wallet(process.env.DEPLOYER_PRIVATE_KEY!);
+  const deployerWallet = new Wallet(
+    process.env.DEPLOYER_PRIVATE_KEY!,
+    provider
+  );
   const contract = await deployAstraeaContract(deployerWallet);
 
   console.log(`Contract Address: ${contract.address}`);
@@ -159,13 +162,89 @@ const parseCVS = (path: string) => {
   });
 };
 
+const sendMoneyToAll = async () => {
+  const keys = require("fs")
+    .readFileSync("secrets.txt", "utf-8")
+    .split(/\r?\n/);
+
+  for (var i = 0; i < 10; i++) {
+    const sender = new Wallet(keys[i], provider);
+    console.log("Sending money from " + sender.address);
+
+    for (var j = 0; j < 9; j++) {
+      const receiver = new Wallet(keys[9 + i * 9 + j]);
+      await sender.sendTransaction({
+        to: receiver.address,
+        value: ethers.utils.parseEther("0.05"),
+      });
+    }
+  }
+};
+
+const readKeys = () => {};
+
+const checkMoneyForAll = async () => {
+  let keys = require("fs").readFileSync("secrets.txt", "utf-8").split(/\r?\n/);
+  keys.forEach(async (key: string) => {
+    const wallet = new Wallet(key, provider);
+    const balance = ethers.utils.formatEther(await wallet.getBalance());
+
+    if (parseFloat(balance) < 0.048)
+      console.log(wallet.address + " has " + balance + " matic");
+  });
+};
+
+const saveBalances = async (fileName: string) => {
+  let keys = require("fs").readFileSync("secrets.txt", "utf-8").split(/\r?\n/);
+  let balances = "";
+
+  for (var i = 0; i < keys.length; i++) {
+    const key = keys[i];
+
+    const wallet = new Wallet(key, provider);
+    const balance = ethers.utils.formatEther(await wallet.getBalance());
+    balances += balance + "\n";
+  }
+
+  fs.writeFileSync(fileName, balances);
+};
+
 const init = async () => {
   // const contractAddress = await deployFirstTime();
+  // console.log(contractAddress);
   // const contract = new Contract(contractAddress, ASTRAEA.abi);
-
   // listenForEvents(contract);
-  const items: Array<AnswerItem> = await parseCVS("data/answers.csv");
-  
+
+  await saveBalances("balances0.txt");
 };
 
 init();
+
+/**
+ for (var i = 0; i < 4; i++) {
+    const receiver = Wallet.createRandom();
+    await wallet.sendTransaction({
+      to: receiver.address,
+      value: ethers.utils.parseEther("0.05"),
+    });
+    console.log(receiver.privateKey);
+  }
+
+ */
+
+/*let data = ""; 
+  items.forEach((item : AnswerItem) => {
+    const wallet = Wallet.createRandom(); 
+    data += wallet.privateKey + "\n"; 
+  }); 
+  fs.writeFileSync("secrets.txt", data)*/
+
+/*const wallet = new Wallet(
+    "0x4300c95015434808c7fae9319c9f2410ab97516bd9e53984cd83db234233ec08"
+  );
+  console.log(wallet.address);
+
+  const wallet2 = new Wallet(
+    "0x1c5363dd55b6de0cfaf7ead7dd0c8af689796c7c8eec0199a5e4fcc86e3dbb61"
+  );
+  console.log(wallet2.address);*/
