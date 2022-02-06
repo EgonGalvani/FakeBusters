@@ -6,9 +6,11 @@ contract ASTRAEA {
     
     event PollCreated(uint256 indexed _id, address indexed _submitter, string _url); 
     event PollClosed(uint256 indexed _id, Outcome _gameOutcome, Outcome _votingOutcome, Outcome _certOutcome); 
-   
     event Voted(uint256 indexed _id, address indexed _voter, Outcome _belief); 
     event Certified(uint256 indexed _id, address indexed _certifier, Outcome _belief); 
+
+    event ClosingDetails(uint256 indexed _id, uint256 totalTrueVoteStake, uint256 totalFalseVoteStake, uint256 totalOpinionVoteStake, uint256 totalTrueCertStake, uint256 totalFalseCertStake, uint256 totalOpinionCertStake); 
+    
 
     enum Outcome { FALSE, TRUE, OPINION, NO_DECISION }
 
@@ -153,7 +155,7 @@ contract ASTRAEA {
         // Termination condition 
         if(currentPoll.totalTrueVoteStake + currentPoll.totalFalseVoteStake + currentPoll.totalOpinionVoteStake >= VOTE_STAKE_LIMIT) {
             currentPoll.open = false; 
-            
+           
             // set outcomes 
             //______________________
             //|    | T   F   O   U  |
@@ -220,6 +222,7 @@ contract ASTRAEA {
             }
         
             // emit closing event 
+            emit ClosingDetails(reservation.pollId, currentPoll.totalTrueVoteStake, currentPoll.totalFalseVoteStake, currentPoll.totalOpinionVoteStake, currentPoll.totalTrueCertStake, currentPoll.totalFalseCertStake, currentPoll.totalOpinionCertStake); 
             emit PollClosed(reservation.pollId, currentPoll.gameOutcome, currentPoll.votingOutcome, currentPoll.certOutcome); 
 
             // remove poll from activePolls 
@@ -247,9 +250,8 @@ contract ASTRAEA {
             polls[pollId].totalFalseCertStake += msg.value; 
         } else{
             polls[pollId].certs[msg.sender].opinionStake += msg.value;
-            polls[pollId].totalTrueCertStake += msg.value; 
+            polls[pollId].totalOpinionCertStake += msg.value; 
         }
-
         
         emit Certified(pollId, msg.sender, belief);  
     }
