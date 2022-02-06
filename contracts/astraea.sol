@@ -6,7 +6,7 @@ contract ASTRAEA {
     
     event PollCreated(uint256 indexed _id, address indexed _submitter, string _url); 
     event PollClosed(uint256 indexed _id, Outcome _gameOutcome, Outcome _votingOutcome, Outcome _certOutcome); 
-
+   
     enum Outcome { FALSE, TRUE, OPINION, NO_DECISION }
 
     struct Belief {
@@ -65,10 +65,10 @@ contract ASTRAEA {
         activePolls.pop(); // remove last element and update length 
     }
 
-    uint256 public constant MAX_VOTE_STAKE = 200; // this should be lower than VOTE_STAKE_LIMIT 
-    uint256 public constant MIN_CERT_STAKE = 50; 
-    uint256 public constant VOTE_STAKE_LIMIT = 100; 
-    uint256 public constant SUBMISSION_FEE = 200; 
+    uint256 public constant MAX_VOTE_STAKE = 10000000000000000; 
+    uint256 public constant MIN_CERT_STAKE = 100000000000000000; 
+    uint256 public constant VOTE_STAKE_LIMIT = 290000000000000000; 
+    uint256 public constant SUBMISSION_FEE = 20000000000000000; 
 
     uint256 trueRewardPool = 0; 
     uint256 falseRewardPool = 0; 
@@ -188,21 +188,20 @@ contract ASTRAEA {
 
             if(currentPoll.gameOutcome == Outcome.NO_DECISION) {
                 // if no decision is taken, the submission fee goes to the reward pools 
-                trueRewardPool += SUBMISSION_FEE; 
-
-                // reward pools swap
-                if(currentPoll.certOutcome == Outcome.TRUE) {
-                    falseRewardPool += trueRewardPool / tetha + opinionRewardPool / tetha; 
-                    trueRewardPool -= trueRewardPool / tetha; // ?? 
-                    opinionRewardPool -= opinionRewardPool / tetha; // ??
+                
+                if(currentPoll.certOutcome == Outcome.NO_DECISION) { 
+                    trueRewardPool += SUBMISSION_FEE / 3;
+                    falseRewardPool += SUBMISSION_FEE / 3;
+                    opinionRewardPool += SUBMISSION_FEE / 3; 
+                } else if(currentPoll.certOutcome == Outcome.TRUE) {
+                    falseRewardPool += SUBMISSION_FEE / 2;
+                    opinionRewardPool += SUBMISSION_FEE / 2; 
                 } else if(currentPoll.certOutcome == Outcome.FALSE) {
-                    trueRewardPool += falseRewardPool / tetha + opinionRewardPool / tetha; 
-                    falseRewardPool -= falseRewardPool / tetha; // ??
-                    opinionRewardPool -= opinionRewardPool / tetha; // ??
-                } else if(currentPoll.certOutcome == Outcome.OPINION) {
-                    opinionRewardPool += falseRewardPool / tetha + trueRewardPool / tetha; 
-                    falseRewardPool -= falseRewardPool / tetha; // ??
-                    trueRewardPool -= trueRewardPool / tetha; // ??
+                    trueRewardPool += SUBMISSION_FEE / 2;
+                    opinionRewardPool += SUBMISSION_FEE / 2; 
+                } else {
+                    trueRewardPool += SUBMISSION_FEE / 2;
+                    falseRewardPool += SUBMISSION_FEE / 2;
                 }
             } else {
                 // save the reward to give to the certifiers 
@@ -250,38 +249,31 @@ contract ASTRAEA {
 
     function withdraw(uint256 poolId) public payable{
         Poll storage currentPoll = polls[poolId]; 
-        require(currentPoll.open == false); 
+        require(currentPoll.open == false, "poll is not closed"); 
 
         uint256 reward = 0; 
     
         // check votes 
         if(currentPoll.gameOutcome == Outcome.NO_DECISION) 
-            reward += currentPoll.votes[msg.sender].trueStake + currentPoll.votes[msg.sender].falseStake; 
+            reward += currentPoll.votes[msg.sender].trueStake + currentPoll.votes[msg.sender].opinionStake + currentPoll.votes[msg.sender].falseStake; 
         else if(currentPoll.gameOutcome == Outcome.TRUE && currentPoll.votes[msg.sender].trueStake > 0)
-            reward += currentPoll.votes[msg.sender].trueStake / currentPoll.totalTrueVoteStake * SUBMISSION_FEE; 
+            reward +=  currentPoll.votes[msg.sender].trueStake + currentPoll.votes[msg.sender].trueStake * SUBMISSION_FEE / currentPoll.totalTrueVoteStake; 
         else if(currentPoll.gameOutcome == Outcome.FALSE && currentPoll.votes[msg.sender].falseStake > 0)
-            reward += currentPoll.votes[msg.sender].falseStake / currentPoll.totalFalseVoteStake * SUBMISSION_FEE; 
+            reward += currentPoll.votes[msg.sender].falseStake + currentPoll.votes[msg.sender].falseStake * SUBMISSION_FEE / currentPoll.totalFalseVoteStake; 
         else if(currentPoll.gameOutcome == Outcome.OPINION && currentPoll.votes[msg.sender].opinionStake > 0)
-            reward += currentPoll.votes[msg.sender].opinionStake / currentPoll.totalOpinionVoteStake * SUBMISSION_FEE; 
+            reward += currentPoll.votes[msg.sender].opinionStake + currentPoll.votes[msg.sender].opinionStake * SUBMISSION_FEE / currentPoll.totalOpinionVoteStake; 
 
         // check certs 
         if(currentPoll.gameOutcome == Outcome.TRUE && currentPoll.certs[msg.sender].trueStake > 0)
-            reward += currentPoll.certReward / currentPoll.totalTrueCertStake * currentPoll.certs[msg.sender].trueStake; 
+            reward += currentPoll.certs[msg.sender].trueStake + currentPoll.certReward  * currentPoll.certs[msg.sender].trueStake / currentPoll.totalTrueCertStake; 
         else if (currentPoll.gameOutcome == Outcome.FALSE && currentPoll.certs[msg.sender].falseStake > 0)
-            reward += currentPoll.certReward / currentPoll.totalFalseCertStake * currentPoll.certs[msg.sender].falseStake;         
+            reward +=currentPoll.certs[msg.sender].falseStake + currentPoll.certReward  * currentPoll.certs[msg.sender].falseStake / currentPoll.totalFalseCertStake;         
         else if (currentPoll.gameOutcome == Outcome.OPINION && currentPoll.certs[msg.sender].falseStake > 0)
-            reward += currentPoll.certReward / currentPoll.totalOpinionCertStake * currentPoll.certs[msg.sender].opinionStake;   
+            reward += currentPoll.certs[msg.sender].opinionStake + currentPoll.certReward  * currentPoll.certs[msg.sender].opinionStake / currentPoll.totalOpinionCertStake;   
 
         // send reward
         if(reward > 0) {
-            (bool sent, bytes memory data) = msg.sender.call{value: reward}("");
-            require(sent, "Failed to send Ether");
+            payable(msg.sender).transfer(reward);
         }
     }   
-	
-    // DEBUG FUNCTION 
-	function emitPollClosed(uint256 id, string memory url) public {
-		emit PollCreated(id, address(0x0), url); 
-		emit PollClosed(id, Outcome.OPINION, Outcome.TRUE, Outcome.FALSE); 
-	}
 }
