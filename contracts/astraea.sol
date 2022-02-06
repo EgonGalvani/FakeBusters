@@ -7,6 +7,9 @@ contract ASTRAEA {
     event PollCreated(uint256 indexed _id, address indexed _submitter, string _url); 
     event PollClosed(uint256 indexed _id, Outcome _gameOutcome, Outcome _votingOutcome, Outcome _certOutcome); 
    
+    event Voted(uint256 indexed _id, address indexed _voter, Outcome _belief); 
+    event Certified(uint256 indexed _id, address indexed _certifier, Outcome _belief); 
+
     enum Outcome { FALSE, TRUE, OPINION, NO_DECISION }
 
     struct Belief {
@@ -67,7 +70,7 @@ contract ASTRAEA {
 
     uint256 public constant MAX_VOTE_STAKE = 10000000000000000; 
     uint256 public constant MIN_CERT_STAKE = 100000000000000000; 
-    uint256 public constant VOTE_STAKE_LIMIT = 290000000000000000; 
+    uint256 public constant VOTE_STAKE_LIMIT = 10000000000000000; 
     uint256 public constant SUBMISSION_FEE = 20000000000000000; 
 
     uint256 trueRewardPool = 0; 
@@ -144,6 +147,8 @@ contract ASTRAEA {
             currentPoll.votes[msg.sender].opinionStake += reservation.stake; 
             currentPoll.totalOpinionVoteStake += reservation.stake; 
         }      
+        
+        emit Voted(reservation.pollId, msg.sender, belief); 
 
         // Termination condition 
         if(currentPoll.totalTrueVoteStake + currentPoll.totalFalseVoteStake + currentPoll.totalOpinionVoteStake >= VOTE_STAKE_LIMIT) {
@@ -244,7 +249,9 @@ contract ASTRAEA {
             polls[pollId].certs[msg.sender].opinionStake += msg.value;
             polls[pollId].totalTrueCertStake += msg.value; 
         }
-     
+
+        
+        emit Certified(pollId, msg.sender, belief);  
     }
 
     function withdraw(uint256 poolId) public payable{
