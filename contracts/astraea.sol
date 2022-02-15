@@ -6,11 +6,11 @@ contract ASTRAEA {
     
     event PollCreated(uint256 indexed _id, address indexed _submitter, string _url); 
     event PollClosed(uint256 indexed _id, Outcome _gameOutcome, Outcome _votingOutcome, Outcome _certOutcome); 
-    event Voted(uint256 indexed _id, address indexed _voter, Outcome _belief); 
-    event Certified(uint256 indexed _id, address indexed _certifier, Outcome _belief); 
+    // event Voted(uint256 indexed _id, address indexed _voter, Outcome _belief); 
+    // event Certified(uint256 indexed _id, address indexed _certifier, Outcome _belief); 
 
-    event ClosingDetails(uint256 indexed _id, uint256 totalTrueVoteStake, uint256 totalFalseVoteStake, uint256 totalOpinionVoteStake, uint256 totalTrueCertStake, uint256 totalFalseCertStake, uint256 totalOpinionCertStake); 
-    
+    // event ClosingDetails(uint256 indexed _id, uint256 totalTrueVoteStake, uint256 totalFalseVoteStake, uint256 totalOpinionVoteStake, uint256 totalTrueCertStake, uint256 totalFalseCertStake, uint256 totalOpinionCertStake); 
+    // event Debug(string info); 
 
     enum Outcome { FALSE, TRUE, OPINION, NO_DECISION }
 
@@ -72,7 +72,7 @@ contract ASTRAEA {
 
     uint256 public constant MAX_VOTE_STAKE = 10000000000000000; 
     uint256 public constant MIN_CERT_STAKE = 100000000000000000; 
-    uint256 public constant VOTE_STAKE_LIMIT = 10000000000000000; 
+    uint256 public constant VOTE_STAKE_LIMIT = 290000000000000000; 
     uint256 public constant SUBMISSION_FEE = 20000000000000000; 
 
     uint256 trueRewardPool = 0; 
@@ -125,6 +125,13 @@ contract ASTRAEA {
         voterReservations[msg.sender] = voteReservation; 
     }
 
+    function outcomeToString(Outcome outcome) internal pure returns (string memory) {
+        if(outcome == Outcome.TRUE) return "TRUE"; 
+        if(outcome == Outcome.FALSE) return "FALSE"; 
+        if(outcome == Outcome.OPINION) return "OPINION"; 
+        if(outcome == Outcome.NO_DECISION) return "NO_DECISION"; 
+    }
+
     function vote(Outcome belief) public {
         // check that the voter has previously request a reservation 
         VoteReservation storage reservation = voterReservations[msg.sender]; 
@@ -150,7 +157,7 @@ contract ASTRAEA {
             currentPoll.totalOpinionVoteStake += reservation.stake; 
         }      
         
-        emit Voted(reservation.pollId, msg.sender, belief); 
+        // emit Voted(reservation.pollId, msg.sender, belief); 
 
         // Termination condition 
         if(currentPoll.totalTrueVoteStake + currentPoll.totalFalseVoteStake + currentPoll.totalOpinionVoteStake >= VOTE_STAKE_LIMIT) {
@@ -168,27 +175,37 @@ contract ASTRAEA {
 
             //outcome from busters
             if(currentPoll.totalFalseVoteStake > currentPoll.totalTrueVoteStake){ // F > T
+                // emit Debug("totalFalseVoteStake > totalTrueVoteStake"); 
                 currentPoll.votingOutcome = currentPoll.totalFalseVoteStake > currentPoll.totalOpinionVoteStake ? Outcome.FALSE : // T < F > O
-                currentPoll.totalFalseVoteStake < currentPoll.totalOpinionVoteStake ? Outcome.OPINION : Outcome.NO_DECISION; // O > F > T : F == O > T
+                (currentPoll.totalFalseVoteStake < currentPoll.totalOpinionVoteStake ? Outcome.OPINION : Outcome.NO_DECISION); // O > F > T : F == O > T
             }
             else if(currentPoll.totalFalseVoteStake < currentPoll.totalTrueVoteStake){ // T > F
-                currentPoll.votingOutcome = currentPoll.totalTrueVoteStake > currentPoll.totalOpinionVoteStake ? Outcome.FALSE : // F < T > O
-                currentPoll.totalTrueVoteStake < currentPoll.totalOpinionVoteStake ? Outcome.OPINION : Outcome.NO_DECISION; // O > T > F : T == O > F
+                // emit Debug("totalFalseVoteStake < totalTrueVoteStake"); 
+                currentPoll.votingOutcome = currentPoll.totalTrueVoteStake > currentPoll.totalOpinionVoteStake ? Outcome.TRUE : // F < T > O
+                (currentPoll.totalTrueVoteStake < currentPoll.totalOpinionVoteStake ? Outcome.OPINION : Outcome.NO_DECISION); // O > T > F : T == O > F
             }
-            else
+            else {
                 currentPoll.votingOutcome = currentPoll.totalOpinionVoteStake > currentPoll.totalTrueVoteStake ? Outcome.OPINION : Outcome.NO_DECISION; // T == F < O : T == F >= O 
+                // emit Debug("Voting ELSE"); 
+            }
+            // emit Debug(string(abi.encodePacked("votingOutcome: ", outcomeToString(currentPoll.votingOutcome)))); 
 
             // outcome from experts (same of busters)
             if(currentPoll.totalFalseCertStake > currentPoll.totalTrueCertStake){ 
+                // emit Debug("totalFalseCertStake > totalTrueCertStake"); 
                 currentPoll.certOutcome = currentPoll.totalFalseCertStake > currentPoll.totalOpinionCertStake ? Outcome.FALSE :
-                currentPoll.totalFalseCertStake < currentPoll.totalOpinionCertStake ? Outcome.OPINION : Outcome.NO_DECISION;
+                (currentPoll.totalFalseCertStake < currentPoll.totalOpinionCertStake ? Outcome.OPINION : Outcome.NO_DECISION);
             }
             else if(currentPoll.totalFalseCertStake < currentPoll.totalTrueCertStake){
-                currentPoll.certOutcome = currentPoll.totalTrueCertStake > currentPoll.totalOpinionCertStake ? Outcome.FALSE :
-                currentPoll.totalTrueCertStake < currentPoll.totalOpinionCertStake ? Outcome.OPINION : Outcome.NO_DECISION;
+                // emit Debug("totalFalseCertStake < totalTrueCertStake"); 
+                currentPoll.certOutcome = currentPoll.totalTrueCertStake > currentPoll.totalOpinionCertStake ? Outcome.TRUE :
+               (currentPoll.totalTrueCertStake < currentPoll.totalOpinionCertStake ? Outcome.OPINION : Outcome.NO_DECISION);
             }
-            else
+            else { 
+                // emit Debug("Cert ELSE"); 
                 currentPoll.certOutcome = currentPoll.totalOpinionCertStake > currentPoll.totalTrueCertStake ? Outcome.OPINION : Outcome.NO_DECISION;
+            }
+            // emit Debug(string(abi.encodePacked("certOutcome: ", outcomeToString(currentPoll.certOutcome)))); 
             
             currentPoll.gameOutcome = currentPoll.votingOutcome == currentPoll.certOutcome ? 
                 currentPoll.votingOutcome : Outcome.NO_DECISION; 
@@ -222,7 +239,7 @@ contract ASTRAEA {
             }
         
             // emit closing event 
-            emit ClosingDetails(reservation.pollId, currentPoll.totalTrueVoteStake, currentPoll.totalFalseVoteStake, currentPoll.totalOpinionVoteStake, currentPoll.totalTrueCertStake, currentPoll.totalFalseCertStake, currentPoll.totalOpinionCertStake); 
+            // emit ClosingDetails(reservation.pollId, currentPoll.totalTrueVoteStake, currentPoll.totalFalseVoteStake, currentPoll.totalOpinionVoteStake, currentPoll.totalTrueCertStake, currentPoll.totalFalseCertStake, currentPoll.totalOpinionCertStake); 
             emit PollClosed(reservation.pollId, currentPoll.gameOutcome, currentPoll.votingOutcome, currentPoll.certOutcome); 
 
             // remove poll from activePolls 
@@ -253,7 +270,7 @@ contract ASTRAEA {
             polls[pollId].totalOpinionCertStake += msg.value; 
         }
         
-        emit Certified(pollId, msg.sender, belief);  
+        // emit Certified(pollId, msg.sender, belief);  
     }
 
     function withdraw(uint256 poolId) public payable{

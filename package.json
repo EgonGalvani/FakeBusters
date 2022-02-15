@@ -2,11 +2,11 @@
   "name": "fakebuster",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index2.js",
   "scripts": {
     "compile": "etherlime compile",
     "build": "tsc",
-    "start": "npm run build && node ./dist/index.js"
+    "start": "npm run build && node ./dist/index2.js"
   },
   "author": "",
   "license": "ISC",
