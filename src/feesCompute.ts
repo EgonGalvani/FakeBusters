@@ -1,7 +1,7 @@
 const csv = require("csv-parser");
 const fs = require("fs");
 
-const parseCVS = (path: string) => {
+const parseCSV = (path: string) => {
   return new Promise<Array<any>>((resolve, reject) => {
     let items: Array<any> = [];
     let stream = fs.createReadStream(path);
@@ -17,20 +17,18 @@ const parseCVS = (path: string) => {
 };
 
 const init = async () => {
-  const fees = await parseCVS("fees/logs.csv");
+  const fees = await parseCSV("fees/logs.csv");
   var tot = 0;
   var counter = 0;
 
-  console.log(fees);
-
-  /*for (var i = 0; i < fees.length; i++) {
+  for (var i = 0; i < fees.length; i++) {
     if (fees[i].action == "WITHDRAW") {
       console.log(fees[i]);
       tot += fees[i].fee;
       counter++;
     }
   }
-  console.log("Avarage: " + tot / counter);*/
+  console.log("Avarage: " + tot / counter);
 };
 
 // cert 0.00021252642955679754
