@@ -1,0 +1,6 @@
+export enum Action {
+  WITHDRAW = "WITHDRAW", 
+  VOTE = "VOTE", 
+  REQUEST_VOTE = "REQUEST_VOTE",
+  CERTIFY = "CERTIFY"
+}

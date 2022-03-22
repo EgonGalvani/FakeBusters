@@ -1,42 +1,8 @@
-import {
-  InfuraWebSocketProvider,
-  JsonRpcProvider,
-} from "@ethersproject/providers";
-import { Contract, ContractFactory, ethers, Signer, Wallet } from "ethers";
-import { format } from "path/posix";
+
 const csv = require("csv-parser");
 const fs = require("fs");
 
 require("dotenv").config();
-const ASTRAEA = require("../build/ASTRAEA.json");
-
-enum Outcome {
-  FALSE = "FALSE",
-  TRUE = "TRUE",
-  OPINION = "OPINION",
-}
-
-/*const provider: JsonRpcProvider = new ethers.providers.JsonRpcProvider(
-  "http://127.0.0.1:7545"
-);*/
-const provider: JsonRpcProvider = new JsonRpcProvider(
-  "https://rpc-mumbai.matic.today"
-);
-
-const deployContract: (
-  abi: string,
-  bytecode: string,
-  signer: Signer
-) => Promise<Contract> = async (abi, bytecode, signer) => {
-  const factory = new ContractFactory(abi, bytecode, signer);
-  return await factory.deploy();
-};
-
-const deployAstraeaContract: (
-  contract_wallet: any
-) => Promise<Contract> = async (contract_wallet) => {
-  return deployContract(ASTRAEA.abi, ASTRAEA.bytecode, contract_wallet);
-};
 
 const submitNews = async (url: string, contract: Contract, wallet: Wallet) => {
   // connect to another wallet
@@ -57,17 +23,6 @@ const getActivePolls = async (contract: Contract) => {
   const activePolls = await contract.getActivePolls({ gasLimit: 300000 });
   console.log(`Active polls: ${activePolls}`);
   return activePolls;
-};
-
-const deployFirstTime = async () => {
-  const deployerWallet = new Wallet(
-    process.env.DEPLOYER_PRIVATE_KEY!,
-    provider
-  );
-  const contract = await deployAstraeaContract(deployerWallet);
-
-  console.log(`Contract Address: ${contract.address}`);
-  return contract.address;
 };
 
 const listenForEvents = (contract: Contract) => {
