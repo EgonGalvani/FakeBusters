@@ -1,4 +1,4 @@
-import { Signer, Contract, ContractFactory } from "ethers";
+import { Signer, Contract, ContractFactory, Wallet, utils } from "ethers";
 import { JsonRpcProvider } from "@ethersproject/providers";
 
 export const deployContract: (
@@ -14,3 +14,20 @@ export const getProvider = () =>
   new JsonRpcProvider(
     "https://rpc-mumbai.matic.today" // local net: "http://127.0.0.1:7545"
   );
+
+export const sendMoney = async (from: Wallet, to: Wallet, eth: number) => {
+  return from.sendTransaction({
+    to: to.address,
+    value: utils.parseEther(eth.toString()),
+  });
+};
+
+export const getBalance = async (wallet: Wallet) => {
+  return parseFloat(utils.formatEther(await wallet.getBalance()));
+};
+
+export const computeFeesFromReceipt = (receipt: any) => {
+  return utils.formatEther(
+    receipt.cumulativeGasUsed.mul(receipt.effectiveGasPrice)
+  );
+};

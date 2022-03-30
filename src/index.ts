@@ -1,190 +1,27 @@
-
-const csv = require("csv-parser");
-const fs = require("fs");
+import { Outcome } from "./types/outcome";
 
 require("dotenv").config();
 
-type AnswerItem = {
-  firstAnswerIndex: number;
-  firstAnswer: Outcome;
-  secondAnswerIndex: number;
-  secondAnswer: Outcome;
-};
-const fromItalianToOutcome = (italian: string) => {
-  //console.log("Converting from italian: " + italian);
+// let keys = require("fs").readFileSync("secrets.txt", "utf-8").split(/\r?\n/);
 
-  if (italian == "Reale") return Outcome.TRUE;
-  if (italian == "Fake") return Outcome.FALSE;
-  if (italian == "Opinione") return Outcome.OPINION;
+const newsUrls: Array<string> = [""];
 
-  throw new Error("Error parsing answer.csv");
-};
-const parseCVS = (path: string) => {
-  return new Promise<Array<AnswerItem>>((resolve, reject) => {
-    let items: Array<AnswerItem> = [];
-    let stream = fs.createReadStream(path);
-    stream = stream.pipe(csv());
-    stream.on("data", (row: any) => {
-      //console.log(row);
+// correct evaluation of each piece of news
+const newsRealEvaluation: Map<string, Outcome> = new Map([
+  // [newsUrl, evaluation]
+]);
 
-      // const index1 : number = parseInt(Object.entries(row)[3][1] as string);
-      // const index2 : number = parseInt(Object.entries(row)[8][1] as string);
-      // const firstAnswer : string = Object.entries(row)[index1 + 4][1] as string;
-      // const secondAnswer : string = Object.entries(row)[index2 + ]
-      items.push({
-        firstAnswerIndex: row.index1,
-        secondAnswerIndex: row.index2,
-        firstAnswer: fromItalianToOutcome(row["answer_1_" + row.index1]),
-        secondAnswer: fromItalianToOutcome(row["answer_2_" + row.index2]),
-      });
-    });
+// evaluations given by the system
+// null = NO_DECISION
+type SystemOutcome = Outcome | null;
+const systemEvaluation: Map<string, SystemOutcome> = new Map([]);
 
-    return stream.on("end", () => {
-      resolve(items);
-    });
-  });
-};
+const init = async () => {};
 
-type Vote = {
-  key: string;
-  index: number;
-  answer: Outcome;
-};
-const parseElabCSV = (path: string) => {
-  return new Promise<Array<Vote>>((resolve, reject) => {
-    let items: Array<Vote> = [];
-    let stream = fs.createReadStream(path);
-    stream = stream.pipe(csv());
-    stream.on("data", (row: any) => {
-      const outcomeString: string = Object.entries(row)[2][1] as string;
-      let outcome: Outcome;
-      if (outcomeString.includes("TRUE")) outcome = Outcome.TRUE;
-      else if (outcomeString.includes("FALSE")) outcome = Outcome.FALSE;
-      else if (outcomeString.includes("OPINION")) outcome = Outcome.OPINION;
-      else throw Error("No correct value for outcome in csv file!!!");
+// const contractAddress = await deployFirstTime();
+// await saveBalances("balances/middle.txt");
 
-      items.push({
-        key: row["privateKey"],
-        index: parseInt(Object.entries(row)[1][1] as string),
-        answer: outcome,
-      });
-    });
-
-    return stream.on("end", () => {
-      resolve(items);
-    });
-  });
-};
-
-const sendMoneyToAll = async () => {
-  const keys = require("fs")
-    .readFileSync("secrets.txt", "utf-8")
-    .split(/\r?\n/);
-
-  for (var i = 0; i < 10; i++) {
-    const sender = new Wallet(keys[i], provider);
-    console.log("Sending money from " + sender.address);
-
-    for (var j = 0; j < 9; j++) {
-      const receiver = new Wallet(keys[9 + i * 9 + j]);
-      await sender.sendTransaction({
-        to: receiver.address,
-        value: ethers.utils.parseEther("0.05"),
-      });
-    }
-  }
-};
-
-const checkMoneyForAll = async () => {
-  let keys = require("fs").readFileSync("secrets.txt", "utf-8").split(/\r?\n/);
-  keys.forEach(async (key: string) => {
-    const wallet = new Wallet(key, provider);
-    const balance = ethers.utils.formatEther(await wallet.getBalance());
-
-    if (parseFloat(balance) < 0.048)
-      console.log(wallet.address + " has " + balance + " matic");
-  });
-};
-
-const saveBalances = async (fileName: string) => {
-  //let keys = require("fs").readFileSync("secrets.txt", "utf-8").split(/\r?\n/);
-  let balances = "";
-  const votes = await parseElabCSV("data/elabAnswersOKK.csv");
-
-  for (var i = 0; i < votes.length; i = i + 2) {
-    const key = votes[i].key;
-
-    const wallet = new Wallet(key, provider);
-    const balance = `"${ethers.utils.formatEther(
-      await wallet.getBalance(24669113)
-    )}","${wallet.address}"`;
-    balances += balance + "\n";
-  }
-
-  fs.writeFileSync(fileName, balances);
-};
-
-const news: Array<string> = [
-  "https://www.ansa.it/canale_saluteebenessere/notizie/salute_bambini/medicina/2021/05/11/covidspike-danneggia-direttamente-cellule-di-vasi-sanguigni_6ba56a18-2c1a-48c5-9ae5-51a7204054f9.html",
-  "https://www.ilfattoquotidiano.it/2022/01/16/le-universita-dimenticate-vanno-in-ordine-sparso-serve-didattica-integrata-chiudere-e-la-strada-piu-facile-ma-penalizza-i-fuorisede-e-chi-non-ha-aiuti/6453227",
-  "https://www.pianetadonne.blog/trasformare-vostri-cari-diamanti-si-puo-anche-italia/",
-  "https://www.ogginotizie.eu/attualita/i-completamente-vaccinati-sarebbero-condannati-a-infettarsi-per-sempre-lo-studio-choc-dal-regno-unito/",
-  "https://www.mentecomportamento.it/la-donna-che-riconosceva-solo-berlusconi-psicologo-cologno-monzese/",
-  "https://www.ogginotizie.eu/attualita/il-parere-degli-avvocati-il-green-pass-si-puo-sostituire-con-lautocertificazione/",
-];
-
-const newsRealEvaluation: Array<Outcome> = [
-  Outcome.FALSE,
-  Outcome.OPINION,
-  Outcome.TRUE,
-  Outcome.FALSE,
-  Outcome.TRUE,
-  Outcome.FALSE,
-];
-
-const systemEvaluation: Array<Outcome | null> = [
-  Outcome.FALSE,
-  null,
-  Outcome.TRUE,
-  Outcome.FALSE,
-  Outcome.TRUE,
-  Outcome.FALSE,
-];
-
-const computeFees = (receipt: any) => {
-  return ethers.utils.formatEther(
-    receipt.cumulativeGasUsed.mul(receipt.effectiveGasPrice)
-  );
-};
-// 0xcB4A9b47cFa6Fa5E1A7a783C7E9221A6fa367206
-
-type BalanceItem = {
-  address: string;
-  balance: number;
-};
-const parseBalanceCSV = (path: string) => {
-  return new Promise<Array<BalanceItem>>((resolve, reject) => {
-    let items: Array<BalanceItem> = [];
-    let stream = fs.createReadStream(path);
-    stream = stream.pipe(csv());
-    stream.on("data", (row: any) => {
-      items.push({
-        balance: parseFloat(row.balance as string),
-        address: row.address as string,
-      });
-    });
-
-    return stream.on("end", () => {
-      resolve(items);
-    });
-  });
-};
-
-const init = async () => {
-  // const contractAddress = await deployFirstTime();
-  // await saveBalances("balances/middle.txt");
-
-  /*const deployer = new Wallet(process.env.DEPLOYER_PRIVATE_KEY!, provider);
+/*const deployer = new Wallet(process.env.DEPLOYER_PRIVATE_KEY!, provider);
   const submitter = new Wallet(process.env.SUBMITTER_PRIVATE_KEY!, provider);
   const expert = new Wallet(process.env.EXPERT_PRIVATE_KEY!, provider);
 
@@ -206,7 +43,7 @@ const init = async () => {
       `[PollCreated] ${openEvents[i].blockNumber} ${currentEvent.args._id}`
     );
   }*/
-
+/*
   let diff = "";
   const initBalances = await parseBalanceCSV("balances/middle.txt");
   const endBalances = await parseBalanceCSV("balances/end.txt");
@@ -335,9 +172,9 @@ const init = async () => {
   expertsFeesStream.end();
 
   await saveBalances("balances/end.txt");*/
-};
+//};
 
-init();
+//init();
 /*
 listenForEvents(contract);
   const submitResult = await submitNews(news[2], contract, submitter);
@@ -386,116 +223,3 @@ listenForEvents(contract);
       });
     }
   }*/
-
-/*
-const voter = new Wallet(
-    "0xbdb09c457d2e4d8b1d511e59e9f81b94a4f2abcd567233a9b0c54aae705862bf",
-    provider
-  );
-  const deployer = new Wallet(process.env.DEPLOYER_PRIVATE_KEY!, provider);
-  const submitter = new Wallet(process.env.SUBMITTER_PRIVATE_KEY!, provider);
-  const expert = new Wallet(process.env.EXPERT_PRIVATE_KEY!, provider);
-  const contract = new Contract(
-    process.env.CONTRACT_ADDRESS!,
-    ASTRAEA.abi,
-    deployer
-  );
-
-  listenForEvents(contract);
-
-  await submitNews(news[0], contract, submitter);
-
-  const newsId = (await getActivePolls(contract))[0];
-  const certFee = await contract.MIN_CERT_STAKE({ gasLimit: 300000 });
-  await cerify(contract, expert, newsId, certFee, newsRealEvaluation[0]);
-
-  const votingFee = await contract.MAX_VOTE_STAKE({ gasLimit: 300000 });
-  const requestVoteResult = await requestVote(contract, voter, votingFee);
-  const voteResult = await vote(contract, voter, newsRealEvaluation[0]);
-
-  console.log(await voter.getBalance());
-  await withdraw(contract, voter, newsId);
-  console.log(await voter.getBalance());
-  */
-
-/*let counter: Array<Array<number>> = [
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
-  ];
-
-  for (var i = 0; i < votes.length; i++) {
-    const index: number = +votes[i].index;
-    counter[index - 1][
-      votes[i].answer == Outcome.TRUE
-        ? 0
-        : votes[i].answer == Outcome.FALSE
-        ? 1
-        : 2
-    ]++;
-  }
-  for (var i = 0; i < counter.length; i++) {
-    console.log(
-      `#${i + 1}\nNUMBER:${
-        counter[i][0] + counter[i][1] + counter[i][2]
-      } \nTRUE: ${counter[i][0]}\nFALSE: ${counter[i][1]}\nOPINION: ${
-        counter[i][2]
-      }`
-    );
-  }*/
-
-/*const keys = require("fs")
-    .readFileSync("secrets.txt", "utf-8")
-    .split(/\r?\n/);
-  const votes = await parseCVS("data/answers.csv");
-
-  let data = "";
-
-  if (keys.length != votes.length) {
-    console.log("different sizes");
-    return;
-  }
-
-  for (var i = 0; i < votes.length; i++) {
-    const currentVote = votes[i];
-    data += `"${keys[i]}","${currentVote.firstAnswerIndex}", "${
-      currentVote.firstAnswer
-    }"\n"${keys[i]}","${+currentVote.secondAnswerIndex + +3}","${
-      currentVote.secondAnswer
-    }"\n`;
-  }
-
-  fs.writeFileSync("data/elabAnswers.csv", data);
-*/
-
-/**
- for (var i = 0; i < 4; i++) {
-    const receiver = Wallet.createRandom();
-    await wallet.sendTransaction({
-      to: receiver.address,
-      value: ethers.utils.parseEther("0.05"),
-    });
-    console.log(receiver.privateKey);
-  }
-
- */
-
-/*let data = ""; 
-  items.forEach((item : AnswerItem) => {
-    const wallet = Wallet.createRandom(); 
-    data += wallet.privateKey + "\n"; 
-  }); 
-  fs.writeFileSync("secrets.txt", data)*/
-
-/*const wallet = new Wallet(
-    "0x4300c95015434808c7fae9319c9f2410ab97516bd9e53984cd83db234233ec08"
-  );
-  console.log(wallet.address);
-
-  const wallet2 = new Wallet(
-    "0x1c5363dd55b6de0cfaf7ead7dd0c8af689796c7c8eec0199a5e4fcc86e3dbb61"
-  );
-  console.log(wallet2.address);*/
