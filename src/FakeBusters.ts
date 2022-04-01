@@ -33,6 +33,7 @@ export class FakeBusters {
           )
         : new Contract(address, FAKE_BUSTERS_DATA.abi, deployer);
 
+    console.log("Contract address: " + contract.address);
     return new FakeBusters(contract);
   }
 
