@@ -1,5 +1,5 @@
 import { Provider } from "@ethersproject/abstract-provider";
-import { Wallet } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 import { FakeBusters } from "./FakeBusters";
 import { Outcome } from "./types/outcome";
 import { Vote } from "./types/vote";
@@ -25,6 +25,21 @@ const systemEvaluation: Map<string, SystemOutcome> = new Map([]);
 const votes: Map<string, Array<Vote>> = new Map([]);
 // TODO: parse of form results to fill this map
 
+const pollCreatedHandler = (id: BigNumber, submitter: string, url: string) => {
+  console.log(`[PollCreated] ${id} ${submitter} ${url}`);
+};
+
+const pollClosedHandler = (
+  id: BigNumber,
+  gameOutcome: BigNumber,
+  votingOutcome: BigNumber,
+  certOutcome: BigNumber
+) => {
+  console.log(
+    `[PollClosed] ${id} ${gameOutcome} ${votingOutcome} ${certOutcome}`
+  );
+};
+
 const init = async () => {
   // provider used to connect to the considered network
   const provider: Provider = getProvider();
@@ -37,6 +52,10 @@ const init = async () => {
   const submitter = new Wallet(process.env.SUBMITTER_PRIVATE_KEY!, provider);
   const expert = new Wallet(process.env.EXPERT_PRIVATE_KEY!, provider);
 
+  // listen for events (open, closed poll(s))
+  contract.listenForEvents(pollCreatedHandler, pollClosedHandler);
+
+  // execute the evaluation process for each news
   news.forEach(async (currentNews: string) => {
     // 1. submit
     const submitResult = await contract.submitNews(currentNews, submitter);
@@ -82,3 +101,5 @@ const init = async () => {
     });
   });
 };
+
+init();
