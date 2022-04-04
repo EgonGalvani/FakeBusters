@@ -22,12 +22,4 @@ export const sendMoney = async (from: Wallet, to: Wallet, eth: number) => {
   });
 };
 
-export const getBalance = async (wallet: Wallet) => {
-  return parseFloat(utils.formatEther(await wallet.getBalance()));
-};
 
-export const computeFeesFromReceipt = (receipt: any) => {
-  return utils.formatEther(
-    receipt.cumulativeGasUsed.mul(receipt.effectiveGasPrice)
-  );
-};

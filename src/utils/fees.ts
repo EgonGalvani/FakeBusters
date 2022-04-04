@@ -1,6 +1,6 @@
 import { Action as UserAction } from "../types/action";
 import { parse as parseCSV } from "./csv";
-
+import { utils } from "ethers";
 export const FEE_LOGS_PATH = "fee/logs.txt";
 
 export const computeAvarageFees = async (
@@ -20,4 +20,10 @@ export const computeAvarageFees = async (
   }
 
   return tot / counter;
+};
+
+export const computeFeesFromReceipt = (receipt: any) => {
+  return utils.formatEther(
+    receipt.cumulativeGasUsed.mul(receipt.effectiveGasPrice)
+  );
 };

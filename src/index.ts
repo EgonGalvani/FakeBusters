@@ -13,7 +13,7 @@ const news: Array<string> = [""];
 
 // correct evaluation of each piece of news
 const newsRealEvaluation: Map<string, Outcome> = new Map([
-  // [newsUrl, evaluation]
+  // [newsUrl, evaluation], 
 ]);
 
 // evaluations given by the system
@@ -67,7 +67,7 @@ const init = async () => {
       expert,
       newsId,
       certFee,
-      newsRealEvaluation.get(currentNews)! // the expert certify in the correct way
+      newsRealEvaluation.get(currentNews)! // the expert certify in the correct way TODO: check toBigNumber
     );
 
     // 3. buster
@@ -85,7 +85,7 @@ const init = async () => {
     });
     // ===== VOTING FOR THE CURRENT PIECE OF NEWS ENDS =====
 
-    // 4. withdraw
+    // 4. withdraw 
     currentVotes.forEach(async (vote: Vote) => {
       /* withdraw only if one of the following statements is true: 
         - the considered piece of news is evaluated as null (NO_DECISION) by the system 
@@ -93,7 +93,7 @@ const init = async () => {
       */
       if (
         systemEvaluation.get(currentNews) == null ||
-        vote.answer == newsRealEvaluation.get(currentNews)
+        vote.answer == systemEvaluation.get(currentNews)
       ) {
         const voter = new Wallet(vote.account, provider);
         const withdrawResult = await contract.withdraw(voter, newsId);

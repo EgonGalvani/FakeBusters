@@ -1,5 +1,5 @@
-import { Wallet } from "ethers";
-import { getBalance } from "./eth";
+import { Wallet, utils } from "ethers";
+import * as fs from "fs";
 
 // check if the passed wallet has at least "threshold" eth as balance
 export const hasAtLeast = async (wallet: Wallet, threshold: number) => {
@@ -36,4 +36,8 @@ export const saveBalances = async (
   });
 
   fs.writeFileSync(fileName, balances);
+};
+
+export const getBalance = async (wallet: Wallet) => {
+  return parseFloat(utils.formatEther(await wallet.getBalance()));
 };
