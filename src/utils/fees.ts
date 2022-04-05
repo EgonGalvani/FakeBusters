@@ -1,5 +1,5 @@
 import { Action as UserAction } from "../types/action";
-import { parse_fees } from "./csv";
+import { parseFees } from "./csv";
 import { utils } from "ethers";
 export const FEE_LOGS_PATH = "fee/logs.txt";
 
@@ -7,7 +7,7 @@ export const computeAvarageFees = async (
   action: UserAction,
   feeLogsFilePath: string = FEE_LOGS_PATH
 ) => {
-  const fees = await parse_fees(feeLogsFilePath);
+  const fees = await parseFees(feeLogsFilePath);
   var tot = 0;
   var counter = 0;
 

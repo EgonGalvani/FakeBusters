@@ -3,6 +3,7 @@ import { BigNumber, Wallet } from "ethers";
 import { FakeBusters } from "./FakeBusters";
 import { Outcome } from "./types/outcome";
 import { Vote } from "./types/vote";
+import { parseVotes } from "./utils/csv";
 import { getProvider } from "./utils/eth";
 
 require("dotenv").config();
@@ -41,6 +42,8 @@ const pollClosedHandler = (
 };
 
 const init = async () => {
+	await parseVotes("data/raw/answer.csv", "wallet_private_keys.txt", newsRealEvaluation, votes);
+
   // provider used to connect to the considered network
   const provider: Provider = getProvider();
 
