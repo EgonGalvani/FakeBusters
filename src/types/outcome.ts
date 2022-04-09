@@ -1,20 +1,26 @@
 import { BigNumber } from "ethers";
 
 export enum Outcome {
-  FALSE = "False",
+  FALSE = "Fake",
   TRUE = "True",
   OPINION = "Opinion",
 }
 
-const outcomeToBigNumberMap = new Map<Outcome, number>([
+const outcomeToNumberMap = new Map<Outcome, number>([
   [Outcome.FALSE, 0],
   [Outcome.TRUE, 1],
   [Outcome.OPINION, 2],
 ]);
 
 export const toBigNumber = (outcome: Outcome) => {
-  if (outcomeToBigNumberMap.has(outcome))
-    return BigNumber.from(outcomeToBigNumberMap.get(outcome));
+  if (outcomeToNumberMap.has(outcome))
+    return BigNumber.from(outcomeToNumberMap.get(outcome));
 
   throw new Error("Error in outcomeToBigNumber, no choice possible");
+};
+
+export const fromBigNumber = (outcome: BigNumber) => {
+  return [...outcomeToNumberMap].find(
+    ([key, val]) => BigNumber.from(val) === outcome
+  )![0];
 };
