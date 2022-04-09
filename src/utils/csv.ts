@@ -4,9 +4,7 @@ import { Vote } from "../types/vote";
 const csv = require("csv-parser");
 const fs = require("fs");
 
-const ingnoredColumn: Array<string> = ["Age range", "Informazioni cronologiche" ]
-
-export const parseFees = (path: string) => {
+export const parse = (path: string) => {
   return new Promise<Array<any>>((resolve, reject) => {
     let items: Array<any> = [];
     let stream = fs.createReadStream(path);
@@ -21,56 +19,32 @@ export const parseFees = (path: string) => {
   });
 };
 
-export const parseVotes = (path: string, pathPK: string, newsRealEvaluation: Map<string, Outcome>, votes: Map<string, Array<Vote>>) => {
-	return new Promise<Map<string, Array<Vote>>>((resolve, reject) => {
-		// get test Private Key of the busters account
-		let PKArray: Array<string> = parseTestPrivateKey(pathPK);
+export const parseVotes = (path: string) => {
+  return new Promise<Map<string, Array<Vote>>>((resolve, reject) => {
+    let votes: Map<string, Array<Vote>> = new Map([]);
 
-		let stream = fs.createReadStream(path);
-		stream = stream.pipe(csv());
-		stream.on("data", (row: any) => {
-			let PKbuster = PKArray.shift();
-			// for each attribute of resulting row obj
-			Object.keys(row).forEach( (attr) => {
-				// that if skips all the not significant columns
-				if(!ingnoredColumn.includes(attr)){
-					let vote: Vote = { account: PKbuster != undefined ? PKbuster : "", answer: outcomeTranslator(row[attr])};
-					let entry = votes.get(attr);
-					// first row is reserved for real votes
-					if(entry == undefined)
-					{
-						newsRealEvaluation.set(attr, vote.answer )
-						votes.set(attr, new Array<Vote>());
-					}
-					else
-						entry.push(vote);
-				}
-			});
-		});
-		stream.on("error", () => {
-			console.log("file not found");
-		})
-		return stream.on("end", () => {
-			resolve(votes);
-		});
-	});
-};
+    let stream = fs.createReadStream(path);
+    stream = stream.pipe(csv());
+    stream.on("data", (row: any) => {
+      // for each attribute of resulting row obj
+      const account = row["Private key"];
+      Object.keys(row).forEach((key: string) => {
+        if (key != "Private key") {
+          const vote: Vote = {
+            account: row["Private key"],
+            answer: row[key] as Outcome,
+          };
+          if (votes.has(key)) votes.get(key)?.push(vote);
+          else votes.set(key, [vote]);
+        }
+      });
+    });
+    stream.on("error", () => {
+      console.log("file not found");
+    });
 
-const parseTestPrivateKey = (path: string) => 
-{
-	let txtread = fs.readFileSync(path, 'utf8');
-	return txtread.toString().replace(/\r\n/g,'\n').split('\n');
-}
-
-export const outcomeTranslator = (out: string) =>
-{
-	switch(out)
-	{
-		case "Fake":
-			return Outcome.FALSE;
-		case "True":
-			return Outcome.TRUE;
-		default:
-			return Outcome.OPINION;
-	};
+    return stream.on("end", () => {
+      resolve(votes);
+    });
+  });
 };
