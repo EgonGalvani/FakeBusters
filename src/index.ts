@@ -267,6 +267,7 @@ const init = async () => {
       const voter = new Wallet(vote.account, provider);
       // first, request vote
       requestVotePromises.push(contract.requestVote(voter, votingFee));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     });
     await Promise.all(requestVotePromises);
     console.log(i + ". All users have requested vote");
@@ -277,6 +278,7 @@ const init = async () => {
 
       // second, actually vote
       votePromises.push(contract.vote(voter, vote.answer));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     });
     await Promise.all(votePromises);
     console.log(i + ". All users have voted");
