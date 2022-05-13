@@ -12,7 +12,8 @@ export const deployContract: (
 
 export const getProvider = () =>
   new JsonRpcProvider(
-    "https://rpc-mumbai.matic.today" // local net: "http://127.0.0.1:7545"
+    // "https://rpc-mumbai.matic.today" // local net: "http://127.0.0.1:7545"
+    "https://rpc-mumbai.maticvigil.com/"
   );
 
 export const sendMoney = async (from: Wallet, to: Wallet, eth: number) => {

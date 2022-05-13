@@ -274,7 +274,6 @@ const init = async () => {
     let votePromises: Promise<any>[] = [];
     currentVotes.forEach(async (vote: Vote) => {
       const voter = new Wallet(vote.account, provider);
-
       // second, actually vote
       votePromises.push(contract.vote(voter, vote.answer));
       await new Promise((resolve) => setTimeout(resolve, 1000));
