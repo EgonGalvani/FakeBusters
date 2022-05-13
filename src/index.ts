@@ -7,6 +7,7 @@ import {
   fromBigNumber as bigNumberToSystemOutcome,
 } from "./types/systemOutcome";
 import { Vote } from "./types/vote";
+import { saveBalances } from "./utils/balance";
 import { parseVotes } from "./utils/csv";
 import { getProvider } from "./utils/eth";
 
@@ -28,18 +29,21 @@ const init = async () => {
   // provider used to connect to the considered network
   let provider: Provider = getProvider();
 
+  console.log("Provider connected");
   // evaluations given by the system
   let systemEvaluation: Map<string, SystemOutcome> = new Map([]);
 
+  console.log("Evaluations initialized");
   // map: news url => [vote1, vote2, ...voteN]
   const votes: Map<string, Array<Vote>> = await parseVotes(
     "data/raw/answer.csv"
   );
-
+  console.log("Data loaded");
   // object used to connect to the smart contract
   // if no address is passed, a new contract is created
   const contract: FakeBusters = await FakeBusters.build(provider);
-
+  console.log("Contract built");
+  
   const pollCreatedHandler = (
     id: BigNumber,
     submitter: string,
@@ -88,8 +92,23 @@ const init = async () => {
   // listen for events (open, closed poll(s))
   contract.listenForEvents(pollCreatedHandler, pollClosedHandler);
 
+  let voters: Wallet[] = [];
+  votes.get(news[0])?.forEach((el)=>{
+    voters.push(new Wallet(el.account, provider));
+    console.log("New voter %s added", el.account);
+  });
+
+  let i = 0;
+  saveBalances(voters, "balances_0");
+
+  console.log("The votations have started");
   // execute the evaluation process for each news
-  news.forEach(async (currentNews: string) => {
+  news.every(async (currentNews: string) => {
+    if (i == 13) {
+      saveBalances(voters, "balances_1");
+    }
+    console.log("Now voting on %s", currentNews);
+
     // 1. submit
     const submitResult = await contract.submitNews(currentNews, submitter);
 
@@ -116,8 +135,11 @@ const init = async () => {
       // second, actually vote
       const voteResult = await contract.vote(voter, vote.answer);
     });
+    i++;
+    return false;
     // ===== VOTING FOR THE CURRENT PIECE OF NEWS ENDS =====
   });
+  saveBalances(voters, "balances_2");
 };
 
 init();
