@@ -151,6 +151,6 @@ export class FakeBusters {
     ) => void
   ) => {
     this._contract.on(this._contract.filters.PollCreated(), poolCreatedHandler);
-    this._contract.on(this._contract.filters.PoolClosed(), poolClosedHandler);
+    this._contract.on(this._contract.filters.PollClosed(), poolClosedHandler);
   };
 }

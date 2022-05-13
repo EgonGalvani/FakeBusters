@@ -16,61 +16,136 @@ require("dotenv").config();
 // correct evaluation of each piece of news
 const newsRealEvaluation: Map<string, Outcome> = new Map([
   // [newsUrl, evaluation],
-  ["https://www.ansa.it/canale_saluteebenessere/notizie/salute_bambini/medicina/2021/05/11/covidspike-danneggia-direttamente-cellule-di-vasi-sanguigni_6ba56a18-2c1a-48c5-9ae5-51a7204054f9.html", Outcome.FALSE],
-  ["https://www.ilfattoquotidiano.it/2022/01/16/le-universita-dimenticate-vanno-in-ordine-sparso-serve-didattica-integrata-chiudere-e-la-strada-piu-facile-ma-penalizza-i-fuorisede-e-chi-non-ha-aiuti/6453227/", Outcome.OPINION],
-  ["https://www.pianetadonne.blog/trasformare-vostri-cari-diamanti-si-puo-anche-italia/", Outcome.TRUE],
-  ["https://www.infowars.com/posts/sweden-democrats-ban-all-refugees-except-ukrainians/", Outcome.FALSE],	
-  ["https://www.bbc.com/news/technology-60709208", Outcome.TRUE],	
-  ["https://www.fixthisnation.com/police-disarm-st-louis-couple-who-defended-their-home-from-wild-protesters/", Outcome.OPINION],	
-  ["https://www.investmentwatchblog.com/a-shockingly-high-percentage-of-the-u-s-population-actually-wants-an-authoritarian-big-brother-police-state/", Outcome.OPINION],	
-  ["https://www.globalresearch.ca/the-incidence-of-cancer-triggered-by-the-covid-19-vaccine/5758110", Outcome.FALSE],
-  ["https://www.healio.com/news/primary-care/20201208/this-was-a-gift-to-us-ivermectin-effective-for-covid19-prophylaxis-treatment", Outcome.FALSE],	
-  ["https://www.euronews.com/2022/01/06/italian-mafia-fugitive-arrested-after-being-spotted-on-google-maps-street-view", Outcome.TRUE],	
-  ["https://www.activistpost.com/2021/09/what-exactly-is-this-great-reset-people-keep-talking-about.html", Outcome.FALSE],	
-  ["https://www.dailymail.co.uk/tvshowbiz/article-10633905/Netflix-tones-sex-scenes-Bridgerton-series-two.html", Outcome.OPINION],	
-  ["https://www.dailymail.co.uk/property/article-10626953/Property-prices-hit-record-high-354-564-demand-exceeds-supply.html", Outcome.TRUE],	
-  ["https://www.ogginotizie.eu/attualita/i-completamente-vaccinati-sarebbero-condannati-a-infettarsi-per-sempre-lo-studio-choc-dal-regno-unito/", Outcome.FALSE],
-  ["https://www.mentecomportamento.it/la-donna-che-riconosceva-solo-berlusconi-psicologo-cologno-monzese/", Outcome.TRUE],	
-  ["https://www.ogginotizie.eu/attualita/il-parere-degli-avvocati-il-green-pass-si-puo-sostituire-con-lautocertificazione/", Outcome.FALSE],		
-  ["https://edition.cnn.com/2022/03/15/media/fox-cameraman-killed-pierre-zakrzewski/index.html", Outcome.TRUE],	
-  ["https://worldnewsdailyreport.com/japanese-whaling-crew-eaten-alive-by-killer-whales-16-dead/", Outcome.FALSE],
-  ["https://www.cnbc.com/2022/01/11/crypto-scams-are-the-top-threat-to-investors-by-far-say-regulators.html", Outcome.OPINION],
-  ["https://www.realmicentral.com/2022/03/15/europe-wants-removable-and-replaceable-batteries/", Outcome.TRUE],	
-  ["https://www.theguardian.com/world/2022/mar/21/when-is-a-window-not-a-window-bewleys-cafe-claims-stained-glass-are-moveable-artworks-in-court", Outcome.OPINION],	
-  ["https://football-italia.net/dybala-will-leave-juventus-at-the-end-of-the-season-as-contract-talks-collapse/", Outcome.TRUE],	
-  ["https://www.theguardian.com/world/2022/mar/19/china-reports-first-coronavirus-deaths-in-over-a-year-amid-omicron-surge", Outcome.TRUE],	
-  ["https://dailybuzzlive.com/human-meat-found-mcdonalds-meat-factory/", Outcome.FALSE],	
-  ["https://www.washingtonpost.com/opinions/2022/03/18/texas-kkk-building-white-supremacy-arts-center/", Outcome.OPINION],	
-  ["https://beforeitsnews.com/health/2022/03/uk-government-report-shows-9-out-of-10-covid-19-deaths-occur-in-fully-vaxxed-3044826.html", Outcome.FALSE]
+  [
+    "https://www.ansa.it/canale_saluteebenessere/notizie/salute_bambini/medicina/2021/05/11/covidspike-danneggia-direttamente-cellule-di-vasi-sanguigni_6ba56a18-2c1a-48c5-9ae5-51a7204054f9.html",
+    Outcome.FALSE,
+  ],
+  [
+    "https://www.ilfattoquotidiano.it/2022/01/16/le-universita-dimenticate-vanno-in-ordine-sparso-serve-didattica-integrata-chiudere-e-la-strada-piu-facile-ma-penalizza-i-fuorisede-e-chi-non-ha-aiuti/6453227/",
+    Outcome.OPINION,
+  ],
+  [
+    "https://www.pianetadonne.blog/trasformare-vostri-cari-diamanti-si-puo-anche-italia/",
+    Outcome.TRUE,
+  ],
+  [
+    "https://www.infowars.com/posts/sweden-democrats-ban-all-refugees-except-ukrainians/",
+    Outcome.FALSE,
+  ],
+  ["https://www.bbc.com/news/technology-60709208", Outcome.TRUE],
+  [
+    "https://www.fixthisnation.com/police-disarm-st-louis-couple-who-defended-their-home-from-wild-protesters/",
+    Outcome.OPINION,
+  ],
+  [
+    "https://www.investmentwatchblog.com/a-shockingly-high-percentage-of-the-u-s-population-actually-wants-an-authoritarian-big-brother-police-state/",
+    Outcome.OPINION,
+  ],
+  [
+    "https://www.globalresearch.ca/the-incidence-of-cancer-triggered-by-the-covid-19-vaccine/5758110",
+    Outcome.FALSE,
+  ],
+  [
+    "https://www.healio.com/news/primary-care/20201208/this-was-a-gift-to-us-ivermectin-effective-for-covid19-prophylaxis-treatment",
+    Outcome.FALSE,
+  ],
+  [
+    "https://www.euronews.com/2022/01/06/italian-mafia-fugitive-arrested-after-being-spotted-on-google-maps-street-view",
+    Outcome.TRUE,
+  ],
+  [
+    "https://www.activistpost.com/2021/09/what-exactly-is-this-great-reset-people-keep-talking-about.html",
+    Outcome.FALSE,
+  ],
+  [
+    "https://www.dailymail.co.uk/tvshowbiz/article-10633905/Netflix-tones-sex-scenes-Bridgerton-series-two.html",
+    Outcome.OPINION,
+  ],
+  [
+    "https://www.dailymail.co.uk/property/article-10626953/Property-prices-hit-record-high-354-564-demand-exceeds-supply.html",
+    Outcome.TRUE,
+  ],
+  [
+    "https://www.ogginotizie.eu/attualita/i-completamente-vaccinati-sarebbero-condannati-a-infettarsi-per-sempre-lo-studio-choc-dal-regno-unito/",
+    Outcome.FALSE,
+  ],
+  [
+    "https://www.mentecomportamento.it/la-donna-che-riconosceva-solo-berlusconi-psicologo-cologno-monzese/",
+    Outcome.TRUE,
+  ],
+  [
+    "https://www.ogginotizie.eu/attualita/il-parere-degli-avvocati-il-green-pass-si-puo-sostituire-con-lautocertificazione/",
+    Outcome.FALSE,
+  ],
+  [
+    "https://edition.cnn.com/2022/03/15/media/fox-cameraman-killed-pierre-zakrzewski/index.html",
+    Outcome.TRUE,
+  ],
+  [
+    "https://worldnewsdailyreport.com/japanese-whaling-crew-eaten-alive-by-killer-whales-16-dead/",
+    Outcome.FALSE,
+  ],
+  [
+    "https://www.cnbc.com/2022/01/11/crypto-scams-are-the-top-threat-to-investors-by-far-say-regulators.html",
+    Outcome.OPINION,
+  ],
+  [
+    "https://www.realmicentral.com/2022/03/15/europe-wants-removable-and-replaceable-batteries/",
+    Outcome.TRUE,
+  ],
+  [
+    "https://www.theguardian.com/world/2022/mar/21/when-is-a-window-not-a-window-bewleys-cafe-claims-stained-glass-are-moveable-artworks-in-court",
+    Outcome.OPINION,
+  ],
+  [
+    "https://football-italia.net/dybala-will-leave-juventus-at-the-end-of-the-season-as-contract-talks-collapse/",
+    Outcome.TRUE,
+  ],
+  [
+    "https://www.theguardian.com/world/2022/mar/19/china-reports-first-coronavirus-deaths-in-over-a-year-amid-omicron-surge",
+    Outcome.TRUE,
+  ],
+  [
+    "https://dailybuzzlive.com/human-meat-found-mcdonalds-meat-factory/",
+    Outcome.FALSE,
+  ],
+  [
+    "https://www.washingtonpost.com/opinions/2022/03/18/texas-kkk-building-white-supremacy-arts-center/",
+    Outcome.OPINION,
+  ],
+  [
+    "https://beforeitsnews.com/health/2022/03/uk-government-report-shows-9-out-of-10-covid-19-deaths-occur-in-fully-vaxxed-3044826.html",
+    Outcome.FALSE,
+  ],
 ]);
 
 const news: Array<string> = [
   "https://www.ansa.it/canale_saluteebenessere/notizie/salute_bambini/medicina/2021/05/11/covidspike-danneggia-direttamente-cellule-di-vasi-sanguigni_6ba56a18-2c1a-48c5-9ae5-51a7204054f9.html",
   "https://www.ilfattoquotidiano.it/2022/01/16/le-universita-dimenticate-vanno-in-ordine-sparso-serve-didattica-integrata-chiudere-e-la-strada-piu-facile-ma-penalizza-i-fuorisede-e-chi-non-ha-aiuti/6453227/",
   "https://www.pianetadonne.blog/trasformare-vostri-cari-diamanti-si-puo-anche-italia/",
-  "https://www.infowars.com/posts/sweden-democrats-ban-all-refugees-except-ukrainians/",	
-  "https://www.bbc.com/news/technology-60709208",	
-  "https://www.fixthisnation.com/police-disarm-st-louis-couple-who-defended-their-home-from-wild-protesters/",	
-  "https://www.investmentwatchblog.com/a-shockingly-high-percentage-of-the-u-s-population-actually-wants-an-authoritarian-big-brother-police-state/",	
+  "https://www.infowars.com/posts/sweden-democrats-ban-all-refugees-except-ukrainians/",
+  "https://www.bbc.com/news/technology-60709208",
+  "https://www.fixthisnation.com/police-disarm-st-louis-couple-who-defended-their-home-from-wild-protesters/",
+  "https://www.investmentwatchblog.com/a-shockingly-high-percentage-of-the-u-s-population-actually-wants-an-authoritarian-big-brother-police-state/",
   "https://www.globalresearch.ca/the-incidence-of-cancer-triggered-by-the-covid-19-vaccine/5758110",
-  "https://www.healio.com/news/primary-care/20201208/this-was-a-gift-to-us-ivermectin-effective-for-covid19-prophylaxis-treatment",	
-  "https://www.euronews.com/2022/01/06/italian-mafia-fugitive-arrested-after-being-spotted-on-google-maps-street-view",	
-  "https://www.activistpost.com/2021/09/what-exactly-is-this-great-reset-people-keep-talking-about.html",	
-  "https://www.dailymail.co.uk/tvshowbiz/article-10633905/Netflix-tones-sex-scenes-Bridgerton-series-two.html",	
-  "https://www.dailymail.co.uk/property/article-10626953/Property-prices-hit-record-high-354-564-demand-exceeds-supply.html",	
+  "https://www.healio.com/news/primary-care/20201208/this-was-a-gift-to-us-ivermectin-effective-for-covid19-prophylaxis-treatment",
+  "https://www.euronews.com/2022/01/06/italian-mafia-fugitive-arrested-after-being-spotted-on-google-maps-street-view",
+  "https://www.activistpost.com/2021/09/what-exactly-is-this-great-reset-people-keep-talking-about.html",
+  "https://www.dailymail.co.uk/tvshowbiz/article-10633905/Netflix-tones-sex-scenes-Bridgerton-series-two.html",
+  "https://www.dailymail.co.uk/property/article-10626953/Property-prices-hit-record-high-354-564-demand-exceeds-supply.html",
   "https://www.ogginotizie.eu/attualita/i-completamente-vaccinati-sarebbero-condannati-a-infettarsi-per-sempre-lo-studio-choc-dal-regno-unito/",
-  "https://www.mentecomportamento.it/la-donna-che-riconosceva-solo-berlusconi-psicologo-cologno-monzese/",	
-  "https://www.ogginotizie.eu/attualita/il-parere-degli-avvocati-il-green-pass-si-puo-sostituire-con-lautocertificazione/",		
-  "https://edition.cnn.com/2022/03/15/media/fox-cameraman-killed-pierre-zakrzewski/index.html",	
+  "https://www.mentecomportamento.it/la-donna-che-riconosceva-solo-berlusconi-psicologo-cologno-monzese/",
+  "https://www.ogginotizie.eu/attualita/il-parere-degli-avvocati-il-green-pass-si-puo-sostituire-con-lautocertificazione/",
+  "https://edition.cnn.com/2022/03/15/media/fox-cameraman-killed-pierre-zakrzewski/index.html",
   "https://worldnewsdailyreport.com/japanese-whaling-crew-eaten-alive-by-killer-whales-16-dead/",
   "https://www.cnbc.com/2022/01/11/crypto-scams-are-the-top-threat-to-investors-by-far-say-regulators.html",
-  "https://www.realmicentral.com/2022/03/15/europe-wants-removable-and-replaceable-batteries/",	
-  "https://www.theguardian.com/world/2022/mar/21/when-is-a-window-not-a-window-bewleys-cafe-claims-stained-glass-are-moveable-artworks-in-court",	
-  "https://football-italia.net/dybala-will-leave-juventus-at-the-end-of-the-season-as-contract-talks-collapse/",	
-  "https://www.theguardian.com/world/2022/mar/19/china-reports-first-coronavirus-deaths-in-over-a-year-amid-omicron-surge",	
-  "https://dailybuzzlive.com/human-meat-found-mcdonalds-meat-factory/",	
-  "https://www.washingtonpost.com/opinions/2022/03/18/texas-kkk-building-white-supremacy-arts-center/",	
-  "https://beforeitsnews.com/health/2022/03/uk-government-report-shows-9-out-of-10-covid-19-deaths-occur-in-fully-vaxxed-3044826.html"
+  "https://www.realmicentral.com/2022/03/15/europe-wants-removable-and-replaceable-batteries/",
+  "https://www.theguardian.com/world/2022/mar/21/when-is-a-window-not-a-window-bewleys-cafe-claims-stained-glass-are-moveable-artworks-in-court",
+  "https://football-italia.net/dybala-will-leave-juventus-at-the-end-of-the-season-as-contract-talks-collapse/",
+  "https://www.theguardian.com/world/2022/mar/19/china-reports-first-coronavirus-deaths-in-over-a-year-amid-omicron-surge",
+  "https://dailybuzzlive.com/human-meat-found-mcdonalds-meat-factory/",
+  "https://www.washingtonpost.com/opinions/2022/03/18/texas-kkk-building-white-supremacy-arts-center/",
+  "https://beforeitsnews.com/health/2022/03/uk-government-report-shows-9-out-of-10-covid-19-deaths-occur-in-fully-vaxxed-3044826.html",
 ];
 
 const init = async () => {
@@ -147,21 +222,23 @@ const init = async () => {
   contract.listenForEvents(pollCreatedHandler, pollClosedHandler);
 
   let voters: Wallet[] = [];
-  votes.get(news[0])?.forEach((el)=>{
+  votes.get(news[0])?.forEach((el) => {
     voters.push(new Wallet(el.account, provider));
-    console.log("New voter %s added", el.account);
+    // console.log("New voter %s added", el.account);
   });
 
-  let i = 0;
-  saveBalances(voters, "balances_0");
-
-  console.log("The votations have started");
+  await saveBalances(voters, "balances_0");
+  console.log("Initial wallets balance saved");
   // execute the evaluation process for each news
-  news.every(async (currentNews: string) => {
+
+  for (var i = 0; i < news.length; i++) {
+    const currentNews = news[i];
+
     if (i == 13) {
-      saveBalances(voters, "balances_1");
+      await saveBalances(voters, "balances_1");
     }
-    console.log("Now voting on %s", currentNews);
+
+    console.log(i + ". Now voting on %s", currentNews);
 
     // 1. submit
     const submitResult = await contract.submitNews(currentNews, submitter);
@@ -180,28 +257,30 @@ const init = async () => {
     const votingFee = await contract.getMaxVotingFee();
     const currentVotes = votes.get(currentNews)!;
 
-    let requestVotePromises : Promise<any>[] = []; 
+    let requestVotePromises: Promise<any>[] = [];
     currentVotes.forEach(async (vote: Vote) => {
       const voter = new Wallet(vote.account, provider);
       // first, request vote
-      requestVotePromises.push(contract.requestVote(voter, votingFee)); 
+      requestVotePromises.push(contract.requestVote(voter, votingFee));
     });
-    await Promise.all(requestVotePromises); 
+    await Promise.all(requestVotePromises);
+    console.log("All users have requested vote");
 
-    let votePromises : Promise<any>[] = []; 
+    let votePromises: Promise<any>[] = [];
     currentVotes.forEach(async (vote: Vote) => {
       const voter = new Wallet(vote.account, provider);
-      
-      // second, actually vote
-      votePromises.push(contract.vote(voter, vote.answer)); 
-    });
-    await Promise.all(votePromises); 
 
-    i++;
-    return false;
+      // second, actually vote
+      votePromises.push(contract.vote(voter, vote.answer));
+    });
+    await Promise.all(votePromises);
+    console.log("All users have voted");
+
+    break;
     // ===== VOTING FOR THE CURRENT PIECE OF NEWS ENDS =====
-  });
-  saveBalances(voters, "balances_2");
+  }
+
+  await saveBalances(voters, "balances_2");
 };
 
 init();

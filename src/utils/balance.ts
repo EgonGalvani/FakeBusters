@@ -28,12 +28,13 @@ export const saveBalances = async (
   wallets: Array<Wallet>,
   fileName: string
 ) => {
-  let balances = '"ADDRESS","BALANCE"';
+  let balances = '"ADDRESS","BALANCE"\n';
 
-  wallets.forEach(async (wallet: Wallet) => {
+  for (var i = 0; i < wallets.length; i++) {
+    const wallet = wallets[i];
     const balance = await getBalance(wallet);
     balances += `"${wallet.address}","${balance}"\n`;
-  });
+  }
 
   fs.writeFileSync(fileName, balances);
 };
