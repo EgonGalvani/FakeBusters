@@ -2,7 +2,7 @@ import { BigNumber } from "ethers";
 
 export enum Outcome {
   FALSE = "Fake",
-  TRUE = "True",
+  TRUE = "Real",
   OPINION = "Opinion",
 }
 

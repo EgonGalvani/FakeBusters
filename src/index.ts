@@ -229,8 +229,8 @@ const init = async () => {
 
   await saveBalances(voters, "balances_0");
   console.log("Initial wallets balance saved");
-  // execute the evaluation process for each news
 
+  // execute the evaluation process for each news
   for (var i = 0; i < news.length; i++) {
     const currentNews = news[i];
 
@@ -270,7 +270,6 @@ const init = async () => {
     });
     await Promise.all(requestVotePromises);
     console.log(i + ". All users have requested vote");
-
     let votePromises: Promise<any>[] = [];
     currentVotes.forEach(async (vote: Vote) => {
       const voter = new Wallet(vote.account, provider);
@@ -280,7 +279,6 @@ const init = async () => {
     });
     await Promise.all(votePromises);
     console.log(i + ". All users have voted");
-
     break;
     // ===== VOTING FOR THE CURRENT PIECE OF NEWS ENDS =====
   }
