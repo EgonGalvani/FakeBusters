@@ -20,7 +20,7 @@ export const toBigNumber = (outcome: Outcome) => {
 };
 
 export const fromBigNumber = (outcome: BigNumber) => {
-  return [...outcomeToNumberMap].find(
-    ([key, val]) => BigNumber.from(val) === outcome
-  )![0];
+  return [...outcomeToNumberMap.entries()]
+  		.filter(({ 1: v }) => BigNumber.from(v).eq(outcome))
+        .map(([k]) => k)![0];
 };
