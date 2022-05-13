@@ -245,6 +245,7 @@ const init = async () => {
 
     // 1. submit
     const submitResult = await contract.submitNews(currentNews, submitter);
+    console.log(i + ". News submitted");
 
     // 2. expert
     const newsId = (await contract.getActivePolls())[0];
@@ -255,6 +256,7 @@ const init = async () => {
       certFee,
       newsRealEvaluation.get(currentNews)! // the expert certify in the correct way TODO: check toBigNumber
     );
+    console.log(i + ". Expert voted");
 
     // 3. buster
     const votingFee = await contract.getMaxVotingFee();
@@ -267,7 +269,7 @@ const init = async () => {
       requestVotePromises.push(contract.requestVote(voter, votingFee));
     });
     await Promise.all(requestVotePromises);
-    console.log("All users have requested vote");
+    console.log(i + ". All users have requested vote");
 
     let votePromises: Promise<any>[] = [];
     currentVotes.forEach(async (vote: Vote) => {
@@ -277,7 +279,7 @@ const init = async () => {
       votePromises.push(contract.vote(voter, vote.answer));
     });
     await Promise.all(votePromises);
-    console.log("All users have voted");
+    console.log(i + ". All users have voted");
 
     break;
     // ===== VOTING FOR THE CURRENT PIECE OF NEWS ENDS =====
