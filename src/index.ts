@@ -235,7 +235,10 @@ const init = async () => {
     const currentNews = news[i];
 
     if (i == 13) {
+      console.log("First phase done. Waiting 1min... ");
+      await new Promise((resolve) => setTimeout(resolve, 60 * 1000));
       await saveBalances(voters, "balances_1");
+      console.log("Proceding with the second phase...");
     }
 
     console.log(i + ". Now voting on %s", currentNews);
@@ -280,7 +283,10 @@ const init = async () => {
     // ===== VOTING FOR THE CURRENT PIECE OF NEWS ENDS =====
   }
 
+  console.log("Finished the second phase, waiting 1 min...");
+  await new Promise((resolve) => setTimeout(resolve, 60 * 1000));
   await saveBalances(voters, "balances_2");
+  console.log("Saved final balances");
 };
 
 init();
