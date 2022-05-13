@@ -28,6 +28,15 @@ The workflow for the evaluation of a piece of news is the following:
 
 4. Finally, the votation participants will receive their rewards.
 
-## Requirements
+## Requirement 
+To execute correctly the script is necessary to create a .env file inside the directory, in particular the file has to contain the following data: 
+- SUBMITTER_PRIVATE_KEY: private key for the wallet of the submitter
+- EXPERT_PRIVATE_KEY: private key for the wallet used to simulate the behaviour of the expert 
+- DEPLOYER_PRIVATE_KEY: private key for the wallet used to deploy the smart contract
 
 ## Installation
+After downloading this repo, execute the following commands: 
+1. `npm install` to install all the project dependencies 
+2. `npm start` to execute the script 
+
+After any modification to the FakeBusters.sol file, the contract has to be re-compiled using the command `npm run compile`; since for the compilation process we use etherline, it could be necessary to install it using the following command: `npm install -g etherlime`. 
