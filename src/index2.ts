@@ -1,5 +1,5 @@
 import { ethers, Wallet } from "ethers";
-import { getProvider } from "./utils/eth";
+import { getProvider, sendMoney } from "./utils/eth";
 import { getBalance } from "./utils/balance";
 
 require("dotenv").config();
@@ -16,6 +16,11 @@ const init = async () => {
     const balance = await getBalance(wallet);
     console.log(wallet.address + " " + balance);
   });
+
+  /*
+  const from = new Wallet(process.env.EXPERT_PRIVATE_KEY!, getProvider()); 
+  const to = new Wallet(process.env.DEPLOYER_PRIVATE_KEY!, getProvider()); 
+  sendMoney(from, to, 1); */
 };
 
 init();

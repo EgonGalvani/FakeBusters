@@ -73,7 +73,7 @@ contract FakeBusters {
     uint256 public constant MAX_VOTE_STAKE = 10000000000000000; 
     uint256 public constant MIN_CERT_STAKE = 100000000000000000; 
     uint256 public constant VOTE_STAKE_LIMIT = 290000000000000000; 
-    uint256 public constant SUBMISSION_FEE = 20000000000000000; 
+    uint256 public constant SUBMISSION_FEE = 50000000000000000; 
 
     uint256 trueRewardPool = 0; 
     uint256 falseRewardPool = 0; 
