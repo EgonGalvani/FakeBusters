@@ -50,7 +50,7 @@ const init = async () => {
     urlIds.set(id, url);
   };
 
-  const pollClosedHandler = (
+  const pollClosedHandler = async (
     id: BigNumber,
     gameOutcome: BigNumber,
     votingOutcome: BigNumber,
@@ -66,6 +66,7 @@ const init = async () => {
     // add system evaluation of the current piece of news to the systemEvaluation map
     systemEvaluation.set(currentNews, bigNumberToSystemOutcome(gameOutcome));
 
+    let promises: Promise<any>[] = [];
     votes.get(currentNews)?.forEach(async (vote: Vote) => {
       /* withdraw only if one of the following statements is true: 
       - the considered piece of news is evaluated as null (NO_DECISION) by the system 
@@ -76,9 +77,11 @@ const init = async () => {
         vote.answer == systemEvaluation.get(currentNews)
       ) {
         const voter = new Wallet(vote.account, provider);
-        const withdrawResult = await contract.withdraw(voter, id);
+        promises.push(contract.withdraw(voter, id));
       }
     });
+
+    await Promise.all(promises);
   };
 
   // submitter and expert wallets
@@ -107,15 +110,23 @@ const init = async () => {
     const votingFee = await contract.getMaxVotingFee();
     const currentVotes = votes.get(currentNews)!;
 
+    let requestVotePromises : Promise<any>[] = []; 
     currentVotes.forEach(async (vote: Vote) => {
       const voter = new Wallet(vote.account, provider);
-
       // first, request vote
-      const requestVoteResult = await contract.requestVote(voter, votingFee);
-
-      // second, actually vote
-      const voteResult = await contract.vote(voter, vote.answer);
+      requestVotePromises.push(contract.requestVote(voter, votingFee)); 
     });
+    await Promise.all(requestVotePromises); 
+
+    let votePromises : Promise<any>[] = []; 
+    currentVotes.forEach(async (vote: Vote) => {
+      const voter = new Wallet(vote.account, provider);
+      
+      // second, actually vote
+      votePromises.push(contract.vote(voter, vote.answer)); 
+    });
+    await Promise.all(votePromises); 
+
     // ===== VOTING FOR THE CURRENT PIECE OF NEWS ENDS =====
   });
 };
