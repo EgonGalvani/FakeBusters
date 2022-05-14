@@ -191,8 +191,8 @@ const init = async () => {
     );
 
     // url of the current news
-    const currentNews: string = urlIds.get(id)!;
-
+    const currentNews: string = [...urlIds.entries()]
+  		.filter((v) => BigNumber.from(v[0]).eq(id))![0][1];
     // add system evaluation of the current piece of news to the systemEvaluation map
     systemEvaluation.set(currentNews, bigNumberToSystemOutcome(gameOutcome));
 
@@ -274,6 +274,7 @@ const init = async () => {
     let votePromises: Promise<any>[] = [];
     currentVotes.forEach(async (vote: Vote) => {
       const voter = new Wallet(vote.account, provider);
+
       // second, actually vote
       votePromises.push(contract.vote(voter, vote.answer));
       await new Promise((resolve) => setTimeout(resolve, 1000));
