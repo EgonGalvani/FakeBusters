@@ -235,9 +235,12 @@ const init = async () => {
     const currentNews = news[i];
 
     if (i == 13) {
-      console.log("First phase done. Waiting 1min... ");
-      await new Promise((resolve) => setTimeout(resolve, 60 * 1000));
-      await saveBalances(voters, "balances_1");
+      console.log("First phase done. Waiting 10 min... ");
+      await new Promise((resolve) => setTimeout(resolve, 60 * 1000)).then(()=>{
+        saveBalances(voters, "balances_1").then(()=>{
+          console.log("Saved partial balances");
+        });
+      });
       console.log("Proceding with the second phase...");
     }
 
@@ -281,14 +284,15 @@ const init = async () => {
     });
     await Promise.all(votePromises);
     console.log(i + ". All users have voted");
-    break;
     // ===== VOTING FOR THE CURRENT PIECE OF NEWS ENDS =====
   }
 
-  console.log("Finished the second phase, waiting 1 min...");
-  await new Promise((resolve) => setTimeout(resolve, 60 * 1000));
-  await saveBalances(voters, "balances_2");
-  console.log("Saved final balances");
+  console.log("Finished the second phase, waiting 10 min...");
+  await new Promise((resolve) => setTimeout(resolve, 60 * 1000)).then(()=>{
+    saveBalances(voters, "balances_2").then(()=>{
+      console.log("Saved final balances");
+    });
+  });
 };
 
 init();
