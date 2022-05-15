@@ -1,26 +1,44 @@
 import { ethers, Wallet } from "ethers";
 import { getProvider, sendMoney } from "./utils/eth";
 import { getBalance } from "./utils/balance";
+import { parse as parseCSV } from "./utils/csv";
+import { writeFileSync } from "fs";
 
 require("dotenv").config();
 
-const privateKeys = [
-  process.env.DEPLOYER_PRIVATE_KEY!,
-  process.env.EXPERT_PRIVATE_KEY!,
-  process.env.SUBMITTER_PRIVATE_KEY!,
-];
+type Balance = {
+  address: string;
+  balance: number;
+};
 
 const init = async () => {
-  privateKeys.forEach(async (privateKey) => {
-    const wallet: Wallet = new Wallet(privateKey, getProvider());
-    const balance = await getBalance(wallet);
-    console.log(wallet.address + " " + balance);
-  });
+  const initial: Array<Balance> = await parseCSV("balances_0"),
+    middle: Array<Balance> = await parseCSV("balances_1"),
+    end: Array<Balance> = await parseCSV("balances_2");
 
-  /*
-  const from = new Wallet(process.env.EXPERT_PRIVATE_KEY!, getProvider()); 
-  const to = new Wallet(process.env.DEPLOYER_PRIVATE_KEY!, getProvider()); 
-  sendMoney(from, to, 1); */
+  if (initial.length != middle.length || end.length != middle.length) {
+    console.log("Error on lengths");
+    return;
+  }
+
+  let diffFirstPhase: Array<Number> = [],
+    diffSecondPhase: Array<Number> = [];
+
+  for (var i = 0; i < initial.length; i++) {
+    diffFirstPhase.push(middle[i].balance - initial[i].balance);
+    diffSecondPhase.push(end[i].balance - middle[i].balance);
+  }
+
+  let csvStringFirstPhase: string = '"ADDRESS","BALANCE"\n',
+    csvStringSecondPhase: string = '"ADDRESS","BALANCE"\n';
+
+  for (var i = 0; i < initial.length; i++) {
+    csvStringFirstPhase += `"${initial[i].address}","${diffFirstPhase[i]}"\n`;
+    csvStringSecondPhase += `"${initial[i].address}","${diffSecondPhase[i]}"\n`;
+  }
+
+  writeFileSync("diffFirstPhase.txt", csvStringFirstPhase);
+  writeFileSync("diffSecondPhase.txt", csvStringSecondPhase);
 };
 
 init();
