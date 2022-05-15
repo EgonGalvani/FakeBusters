@@ -7,8 +7,8 @@ import { writeFileSync } from "fs";
 require("dotenv").config();
 
 type Balance = {
-  address: string;
-  balance: number;
+  ADDRESS: string;
+  BALANCE: string;
 };
 
 const init = async () => {
@@ -25,16 +25,20 @@ const init = async () => {
     diffSecondPhase: Array<Number> = [];
 
   for (var i = 0; i < initial.length; i++) {
-    diffFirstPhase.push(middle[i].balance - initial[i].balance);
-    diffSecondPhase.push(end[i].balance - middle[i].balance);
+    diffFirstPhase.push(
+      parseFloat(middle[i].BALANCE) - parseFloat(initial[i].BALANCE)
+    );
+    diffSecondPhase.push(
+      parseFloat(end[i].BALANCE) - parseFloat(middle[i].BALANCE)
+    );
   }
 
   let csvStringFirstPhase: string = '"ADDRESS","BALANCE"\n',
     csvStringSecondPhase: string = '"ADDRESS","BALANCE"\n';
 
   for (var i = 0; i < initial.length; i++) {
-    csvStringFirstPhase += `"${initial[i].address}","${diffFirstPhase[i]}"\n`;
-    csvStringSecondPhase += `"${initial[i].address}","${diffSecondPhase[i]}"\n`;
+    csvStringFirstPhase += `"${initial[i].ADDRESS}","${diffFirstPhase[i]}"\n`;
+    csvStringSecondPhase += `"${initial[i].ADDRESS}","${diffSecondPhase[i]}"\n`;
   }
 
   writeFileSync("diffFirstPhase.txt", csvStringFirstPhase);

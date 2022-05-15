@@ -6,7 +6,8 @@
   "scripts": {
     "compile": "etherlime compile",
     "build": "tsc",
-    "start": "npm run build && node ./dist/index.js"
+    "start": "npm run build && node ./dist/index.js",
+    "start2": "npm run build && node ./dist/index2.js"
   },
   "author": "",
   "license": "ISC",
