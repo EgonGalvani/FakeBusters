@@ -191,8 +191,9 @@ const init = async () => {
     );
 
     // url of the current news
-    const currentNews: string = [...urlIds.entries()]
-  		.filter((v) => BigNumber.from(v[0]).eq(id))![0][1];
+    const currentNews: string = [...urlIds.entries()].filter((v) =>
+      BigNumber.from(v[0]).eq(id)
+    )![0][1];
     // add system evaluation of the current piece of news to the systemEvaluation map
     systemEvaluation.set(currentNews, bigNumberToSystemOutcome(gameOutcome));
 
@@ -236,12 +237,9 @@ const init = async () => {
 
     if (i == 13) {
       console.log("First phase done. Waiting 10 min... ");
-      await new Promise((resolve) => setTimeout(resolve, 60 * 1000)).then(()=>{
-        saveBalances(voters, "balances_1").then(()=>{
-          console.log("Saved partial balances");
-        });
-      });
-      console.log("Proceding with the second phase...");
+      await new Promise((resolve) => setTimeout(resolve, 10 * 60 * 1000));
+      await saveBalances(voters, "balances_1");
+      console.log("Saved partial balances, proceding with the second phase...");
     }
 
     console.log(i + ". Now voting on %s", currentNews);
@@ -265,34 +263,34 @@ const init = async () => {
     const votingFee = await contract.getMaxVotingFee();
     const currentVotes = votes.get(currentNews)!;
 
+    // first, request vote (for all busters)
     let requestVotePromises: Promise<any>[] = [];
     currentVotes.forEach(async (vote: Vote) => {
       const voter = new Wallet(vote.account, provider);
-      // first, request vote
       requestVotePromises.push(contract.requestVote(voter, votingFee));
+
+      // timout to avoid blacklist by the provider
       await new Promise((resolve) => setTimeout(resolve, 1000));
     });
+    // await the request to fulfill for each buster
     await Promise.all(requestVotePromises);
     console.log(i + ". All users have requested vote");
+
+    // same thing but this time for the actual vote
     let votePromises: Promise<any>[] = [];
     currentVotes.forEach(async (vote: Vote) => {
       const voter = new Wallet(vote.account, provider);
-
-      // second, actually vote
       votePromises.push(contract.vote(voter, vote.answer));
       await new Promise((resolve) => setTimeout(resolve, 1000));
     });
     await Promise.all(votePromises);
     console.log(i + ". All users have voted");
-    // ===== VOTING FOR THE CURRENT PIECE OF NEWS ENDS =====
   }
 
   console.log("Finished the second phase, waiting 10 min...");
-  await new Promise((resolve) => setTimeout(resolve, 60 * 1000)).then(()=>{
-    saveBalances(voters, "balances_2").then(()=>{
-      console.log("Saved final balances");
-    });
-  });
+  await new Promise((resolve) => setTimeout(resolve, 10 * 60 * 1000));
+  await saveBalances(voters, "balances_2");
+  console.log("Saved final balances");
 };
 
 init();
